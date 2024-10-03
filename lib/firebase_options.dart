@@ -54,19 +54,19 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCa1xzYdAjxZScr4eGsTXRFvlhe9v5KR1I',
-    appId: '1:774919900411:android:9b0736b7cf41cf4ed8345e',
-    messagingSenderId: '774919900411',
-    projectId: 'gymenergy-ba2a2',
-    storageBucket: 'gymenergy-ba2a2.appspot.com',
+    apiKey: 'AIzaSyDSvJyXe1DdyPGSTnrtNlpT_sX_h093Nj4',
+    appId: '1:545848918902:android:39438377a3a8ad33563057',
+    messagingSenderId: '545848918902',
+    projectId: 'gymenergy-d7b97',
+    storageBucket: 'gymenergy-d7b97.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCTd5O-zoKTHyGGE2QXjRr9sOz4jCyqSYY',
-    appId: '1:774919900411:ios:6b368837c9508020d8345e',
-    messagingSenderId: '774919900411',
-    projectId: 'gymenergy-ba2a2',
-    storageBucket: 'gymenergy-ba2a2.appspot.com',
+    apiKey: 'AIzaSyA0x4QZZ3QlAv6KM1gkd2FNp19ulC_z5Bc',
+    appId: '1:545848918902:ios:b47b2e79edb63adb563057',
+    messagingSenderId: '545848918902',
+    projectId: 'gymenergy-d7b97',
+    storageBucket: 'gymenergy-d7b97.appspot.com',
     iosBundleId: 'com.example.gymEnergy',
   );
 
@@ -79,4 +79,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'gymenergy-ba2a2.appspot.com',
     measurementId: 'G-SPZMDGDBQ1',
   );
+
 }

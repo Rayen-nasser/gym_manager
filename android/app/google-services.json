@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "774919900411",
-    "project_id": "gymenergy-ba2a2",
-    "storage_bucket": "gymenergy-ba2a2.appspot.com"
+    "project_number": "545848918902",
+    "project_id": "gymenergy-d7b97",
+    "storage_bucket": "gymenergy-d7b97.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:774919900411:android:9b0736b7cf41cf4ed8345e",
+        "mobilesdk_app_id": "1:545848918902:android:39438377a3a8ad33563057",
         "android_client_info": {
-          "package_name": "com.ryn.gymenergy"
+          "package_name": "com.example.gym_energy"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCa1xzYdAjxZScr4eGsTXRFvlhe9v5KR1I"
+          "current_key": "AIzaSyDSvJyXe1DdyPGSTnrtNlpT_sX_h093Nj4"
         }
       ],
       "services": {

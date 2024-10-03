@@ -13,6 +13,9 @@ class Client {
   final double totalPaid; // Total amount paid by the client
   final List<DateTime> datesPaid; // List of payment dates
   final DateTime nextPaymentDate; // Next payment date
+  final String trainingType; // Personal or Trainer
+  final String? trainerName; // Trainer's name if applicable
+  final String? additionalInfo; // Long text information about the client
 
   // Constructor
   Client({
@@ -27,6 +30,9 @@ class Client {
     required this.totalPaid,
     required this.datesPaid,
     required this.nextPaymentDate,
+    required this.trainingType, // Required field
+    this.trainerName, // Optional field
+    this.additionalInfo, // Optional long text field
   });
 
   // Method to display the full name
@@ -77,6 +83,9 @@ class Client {
       nextPaymentDate: (data['membershipExpiration'] as Timestamp)
           .toDate()
           .add(const Duration(days: 30)), // Calculate next payment date
+      trainingType: data['trainingType'] ?? 'personal', // Default to personal if not provided
+      trainerName: data['trainerName'], // Nullable
+      additionalInfo: data['additionalInfo'], // Nullable, long text info
     );
   }
 
@@ -93,6 +102,9 @@ class Client {
       'totalPaid': totalPaid,
       'datesPaid': datesPaid.map((date) => Timestamp.fromDate(date)).toList(),
       'nextPaymentDate': Timestamp.fromDate(nextPaymentDate),
+      'trainingType': trainingType,
+      'trainerName': trainerName, // Optional field
+      'additionalInfo': additionalInfo, // Optional long text field
     };
   }
 }
