@@ -7,13 +7,13 @@ class Client {
   final String lastName;
   final String email;
   final String phoneNumber;
-  final List<Sport> sports; // List of sports the client is enrolled in
-  final DateTime createdAt; // Date when the client was added
+  final List<Sport>? sports; // List of sports the client is enrolled in
+  final DateTime? createdAt; // Date when the client was added
   final DateTime membershipExpiration; // Expiration date for the client's membership
-  final double totalPaid; // Total amount paid by the client
-  final List<DateTime> datesPaid; // List of payment dates
-  final DateTime nextPaymentDate; // Next payment date
-  final String trainingType; // Personal or Trainer
+  final double? totalPaid; // Total amount paid by the client
+  final List<DateTime>? datesPaid; // List of payment dates
+  final DateTime? nextPaymentDate; // Next payment date
+  final String? trainingType; // Personal or Trainer
   final String? trainerName; // Trainer's name if applicable
   final String? additionalInfo; // Long text information about the client
 
@@ -24,13 +24,13 @@ class Client {
     required this.lastName,
     required this.email,
     required this.phoneNumber,
-    required this.sports,
-    required this.createdAt,
+    this.sports,
+    this.createdAt,
     required this.membershipExpiration,
-    required this.totalPaid,
-    required this.datesPaid,
-    required this.nextPaymentDate,
-    required this.trainingType, // Required field
+    this.totalPaid,
+    this.datesPaid,
+    this.nextPaymentDate,
+    this.trainingType, // Required field
     this.trainerName, // Optional field
     this.additionalInfo, // Optional long text field
   });
@@ -41,8 +41,8 @@ class Client {
   }
 
   // Method to calculate total paid from sports prices
-  double getTotalPaidFromSports() {
-    return sports.fold(0, (sum, sport) => sum + sport.price);
+  double? getTotalPaidFromSports() {
+    return sports?.fold(0, (sum, sport) => sum! + sport.price);
   }
 
   // Method to calculate the next payment date based on membershipExpiration
@@ -52,8 +52,8 @@ class Client {
 
   // Method to add a paid date
   void addPaymentDate(DateTime date) {
-    if (!datesPaid.contains(date)) {
-      datesPaid.add(date);
+    if (!datesPaid!.contains(date)) {
+      datesPaid?.add(date);
     }
   }
 
@@ -96,12 +96,12 @@ class Client {
       'lastName': lastName,
       'email': email,
       'phoneNumber': phoneNumber,
-      'sports': sports.map((sport) => sport.toMap()).toList(),
-      'createdAt': Timestamp.fromDate(createdAt),
+      'sports': sports?.map((sport) => sport.toMap()).toList(),
+      'createdAt': Timestamp.fromDate(createdAt!),
       'membershipExpiration': Timestamp.fromDate(membershipExpiration),
       'totalPaid': totalPaid,
-      'datesPaid': datesPaid.map((date) => Timestamp.fromDate(date)).toList(),
-      'nextPaymentDate': Timestamp.fromDate(nextPaymentDate),
+      'datesPaid': datesPaid?.map((date) => Timestamp.fromDate(date)).toList(),
+      'nextPaymentDate': Timestamp.fromDate(nextPaymentDate!),
       'trainingType': trainingType,
       'trainerName': trainerName, // Optional field
       'additionalInfo': additionalInfo, // Optional long text field

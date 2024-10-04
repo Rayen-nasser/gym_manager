@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../localization.dart';
-import 'members_screen.dart';
+import '../member/members_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function() onThemeChanged;
@@ -21,39 +21,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     const MembersScreen(),
-    const Center(child: Text(
-      "شاشة لوحة التحكم",
-      style: TextStyle(
-        fontFamily: 'Cairo',
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-      ),
-    )),
-    const Center(child: Text(
-      "شاشة التحصيل",
-      style: TextStyle(
-        fontFamily: 'Cairo',
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-      ),
-    )),
-    const Center(child: Text(
-      "شاشة صالة الألعاب الرياضية",
-      style: TextStyle(
-        fontFamily: 'Cairo',
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-      ),
-    )),
-    const Center(child: Text(
-      "تقرير اليوم",
-      style: TextStyle(
-        fontFamily: 'Cairo',
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-      ),
-    )),
+    _buildCenteredText("شاشة لوحة التحكم"),
+    _buildCenteredText("شاشة التحصيل"),
+    _buildCenteredText("شاشة صالة الألعاب الرياضية"),
+    _buildCenteredText("تقرير اليوم"),
   ];
+
+  static Widget _buildCenteredText(String text) {
+    return Center(
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontFamily: 'Cairo',
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -86,11 +71,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          double paddingFactor = isTablet ? 0.2 : 0.05;
+          double paddingFactor = isTablet ? 0.1 : 0.05; // Adjusted padding
           return Padding(
-            padding: EdgeInsets.symmetric(
-                horizontal: constraints.maxWidth * paddingFactor
-            ),
+            padding: EdgeInsets.symmetric(horizontal: constraints.maxWidth * paddingFactor),
             child: _screens[_selectedIndex],
           );
         },

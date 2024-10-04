@@ -28,14 +28,14 @@ class _LoginScreenState extends State<LoginScreen> {
           return Stack(
             children: [
               // Background image with overlay
-              Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/gym_background.jpg'), // Add your background image here
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
+              // Container(
+              //   decoration: const BoxDecoration(
+              //     image: DecorationImage(
+              //       image: AssetImage('assets/gym_background.jpg'), // Add your background image here
+              //       fit: BoxFit.cover,
+              //     ),
+              //   ),
+              // ),
               // Dark overlay for better contrast
               Container(
                 color: Colors.black.withOpacity(0.6),
