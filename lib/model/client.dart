@@ -1,110 +1,152 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gym_energy/model/sport.dart';
 
+enum MemberType {
+  personal, // Regular gym member
+  trainer   // Gym trainer
+}
+
 class Client {
-  final String id; // Unique client ID
+  final String id;
   final String firstName;
   final String lastName;
   final String email;
   final String phoneNumber;
-  final List<Sport>? sports; // List of sports the client is enrolled in
-  final DateTime? createdAt; // Date when the client was added
-  final DateTime membershipExpiration; // Expiration date for the client's membership
-  final double? totalPaid; // Total amount paid by the client
-  final List<DateTime>? datesPaid; // List of payment dates
-  final DateTime? nextPaymentDate; // Next payment date
-  final String? trainingType; // Personal or Trainer
-  final String? trainerName; // Trainer's name if applicable
-  final String? additionalInfo; // Long text information about the client
+  final DateTime createdAt;
+  final DateTime membershipExpiration;
+  final MemberType memberType;
 
-  // Constructor
+  // Payment tracking (cash only)
+  final double totalPaid;
+  final List<DateTime> paymentDates;
+  final DateTime nextPaymentDate;
+
+  // Sports/Training information
+  final List<Sport> sports; // For personal: enrolled sports, For trainer: sports they teach
+  final String? assignedTrainerId; // Only for personal members - their trainer's ID
+  final List<String>? clientIds; // Only for trainers - list of their clients' IDs
+
+  // Additional information
+  final String? notes;
+
   Client({
     required this.id,
     required this.firstName,
     required this.lastName,
     required this.email,
     required this.phoneNumber,
-    this.sports,
-    this.createdAt,
+    required this.createdAt,
     required this.membershipExpiration,
-    this.totalPaid,
-    this.datesPaid,
-    this.nextPaymentDate,
-    this.trainingType, // Required field
-    this.trainerName, // Optional field
-    this.additionalInfo, // Optional long text field
+    required this.memberType,
+    required this.totalPaid,
+    required this.paymentDates,
+    required this.nextPaymentDate,
+    required this.sports,
+    this.assignedTrainerId,
+    this.clientIds,
+    this.notes,
   });
 
-  // Method to display the full name
-  String getFullName() {
-    return '$firstName $lastName';
-  }
+  String get fullName => '$firstName $lastName';
 
-  // Method to calculate total paid from sports prices
-  double? getTotalPaidFromSports() {
-    return sports?.fold(0, (sum, sport) => sum! + sport.price);
-  }
+  bool get isActive => membershipExpiration.isAfter(DateTime.now());
 
-  // Method to calculate the next payment date based on membershipExpiration
-  DateTime calculateNextPaymentDate() {
-    return membershipExpiration.add(const Duration(days: 30));
-  }
+  bool get isTrainer => memberType == MemberType.trainer;
 
-  // Method to add a paid date
-  void addPaymentDate(DateTime date) {
-    if (!datesPaid!.contains(date)) {
-      datesPaid?.add(date);
-    }
-  }
-
-  // Factory method to create a Client from a map (e.g., Firestore document)
   factory Client.fromMap(Map<String, dynamic> data, String documentId) {
-    // Cast sports data to List<Sport>
-    List<Sport> sportList = (data['sports'] as List<dynamic>? ?? [])
-        .map((item) => Sport.fromMap(item as Map<String, dynamic>))
-        .toList();
-
-    // Cast datesPaid data to List<DateTime>
-    List<DateTime> datesPaidList = (data['datesPaid'] as List<dynamic>? ?? [])
-        .map((item) => (item as Timestamp).toDate())
-        .toList();
-
     return Client(
       id: documentId,
       firstName: data['firstName'] ?? '',
       lastName: data['lastName'] ?? '',
       email: data['email'] ?? '',
       phoneNumber: data['phoneNumber'] ?? '',
-      sports: sportList,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       membershipExpiration: (data['membershipExpiration'] as Timestamp).toDate(),
-      totalPaid: data['totalPaid']?.toDouble() ?? 0.0,
-      datesPaid: datesPaidList,
-      nextPaymentDate: (data['membershipExpiration'] as Timestamp)
-          .toDate()
-          .add(const Duration(days: 30)), // Calculate next payment date
-      trainingType: data['trainingType'] ?? 'personal', // Default to personal if not provided
-      trainerName: data['trainerName'], // Nullable
-      additionalInfo: data['additionalInfo'], // Nullable, long text info
+      memberType: MemberType.values.firstWhere(
+            (e) => e.toString() == data['memberType'],
+        orElse: () => MemberType.personal,
+      ),
+      totalPaid: (data['totalPaid'] ?? 0.0).toDouble(),
+      paymentDates: (data['paymentDates'] as List<dynamic>? ?? [])
+          .map((date) => (date as Timestamp).toDate())
+          .toList(),
+      nextPaymentDate: (data['nextPaymentDate'] as Timestamp).toDate(),
+      sports: (data['sports'] as List<dynamic>? ?? [])
+          .map((item) => Sport.fromMap(item as Map<String, dynamic>))
+          .toList(),
+      assignedTrainerId: data['assignedTrainerId'],
+      clientIds: (data['clientIds'] as List<dynamic>?)?.cast<String>(),
+      notes: data['notes'],
     );
   }
 
-  // Method to convert Client object to map (e.g., for saving to Firestore)
   Map<String, dynamic> toMap() {
     return {
       'firstName': firstName,
       'lastName': lastName,
       'email': email,
       'phoneNumber': phoneNumber,
-      'sports': sports?.map((sport) => sport.toMap()).toList(),
-      'createdAt': Timestamp.fromDate(createdAt!),
+      'createdAt': Timestamp.fromDate(createdAt),
       'membershipExpiration': Timestamp.fromDate(membershipExpiration),
+      'memberType': memberType.toString(),
       'totalPaid': totalPaid,
-      'datesPaid': datesPaid?.map((date) => Timestamp.fromDate(date)).toList(),
-      'nextPaymentDate': Timestamp.fromDate(nextPaymentDate!),
-      'trainingType': trainingType,
-      'trainerName': trainerName, // Optional field
-      'additionalInfo': additionalInfo, // Optional long text field
+      'paymentDates': paymentDates.map((date) => Timestamp.fromDate(date)).toList(),
+      'nextPaymentDate': Timestamp.fromDate(nextPaymentDate),
+      'sports': sports.map((sport) => sport.toMap()).toList(),
+      'assignedTrainerId': assignedTrainerId,
+      'clientIds': clientIds,
+      'notes': notes,
     };
+  }
+
+  // Add a payment
+  Client addPayment(double amount, DateTime paymentDate) {
+    List<DateTime> updatedPaymentDates = List.from(paymentDates)..add(paymentDate);
+    return Client(
+      id: id,
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      phoneNumber: phoneNumber,
+      createdAt: createdAt,
+      membershipExpiration: membershipExpiration,
+      memberType: memberType,
+      totalPaid: totalPaid + amount,
+      paymentDates: updatedPaymentDates,
+      nextPaymentDate: calculateNextPaymentDate(paymentDate),
+      sports: sports,
+      assignedTrainerId: assignedTrainerId,
+      clientIds: clientIds,
+      notes: notes,
+    );
+  }
+
+  // Calculate next payment date (30 days from last payment)
+  DateTime calculateNextPaymentDate(DateTime lastPaymentDate) {
+    return lastPaymentDate.add(const Duration(days: 30));
+  }
+
+  // Add a client (for trainers only)
+  Client? addClient(String clientId) {
+    if (memberType != MemberType.trainer) return null;
+
+    List<String> updatedClientIds = List.from(clientIds ?? [])..add(clientId);
+    return Client(
+      id: id,
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      phoneNumber: phoneNumber,
+      createdAt: createdAt,
+      membershipExpiration: membershipExpiration,
+      memberType: memberType,
+      totalPaid: totalPaid,
+      paymentDates: paymentDates,
+      nextPaymentDate: nextPaymentDate,
+      sports: sports,
+      assignedTrainerId: assignedTrainerId,
+      clientIds: updatedClientIds,
+      notes: notes,
+    );
   }
 }

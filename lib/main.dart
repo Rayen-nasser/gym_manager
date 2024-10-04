@@ -4,8 +4,6 @@ import 'package:gym_energy/screens/dashboard/home_screen.dart';
 import 'package:gym_energy/themes/gym_themes.dart';  // Updated import path
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'themes/gym_themes.dart';  // For theme persistence
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -55,18 +53,18 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Gym Energy',
       theme: _isDarkMode ? GymThemes.darkTheme : GymThemes.lightTheme,
-      home: Directionality(
-        textDirection: TextDirection.rtl, // RTL support for Arabic
-        child: HomeScreen(
-          onThemeChanged: toggleTheme,
-          isDarkMode: _isDarkMode,
-        ),
+      home: HomeScreen(
+        onThemeChanged: toggleTheme,
+        isDarkMode: _isDarkMode,
       ),
       builder: (context, child) {
         return MediaQuery(
           // Ensure proper text scaling
           data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
-          child: child!,
+          child: Directionality(
+            textDirection: TextDirection.rtl, // Global RTL support for the entire app
+            child: child!,
+          ),
         );
       },
       debugShowCheckedModeBanner: false,

@@ -1,25 +1,36 @@
+
 class Sport {
+  final String id;
   final String name;
-  final double price; // Changed to double for monetary value
+  final double price;
+  final String? description;
+  final int sessionDuration; // in minutes
 
   Sport({
+    required this.id,
     required this.name,
     required this.price,
+    this.description,
+    this.sessionDuration = 60,
   });
 
-  // Factory method to create a Sport from a map
   factory Sport.fromMap(Map<String, dynamic> data) {
     return Sport(
+      id: data['id'] ?? '',
       name: data['name'] ?? '',
-      price: (data['price'] ?? 0.0).toDouble(), // Ensure it's a double
+      price: (data['price'] ?? 0.0).toDouble(),
+      description: data['description'],
+      sessionDuration: data['sessionDuration'] ?? 60,
     );
   }
 
-  // Method to convert Sport object to map
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'name': name,
       'price': price,
+      'description': description,
+      'sessionDuration': sessionDuration,
     };
   }
 }

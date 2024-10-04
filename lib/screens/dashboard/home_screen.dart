@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:gym_energy/screens/client/add_edit_client_screen.dart';
+import 'package:gym_energy/screens/client/list_clients_screen.dart';
 import '../../localization.dart';
-import '../member/members_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function() onThemeChanged;
@@ -20,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
-    const MembersScreen(),
+    const ClientsScreen(),
     _buildCenteredText("شاشة لوحة التحكم"),
     _buildCenteredText("شاشة التحصيل"),
     _buildCenteredText("شاشة صالة الألعاب الرياضية"),
