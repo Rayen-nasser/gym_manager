@@ -158,22 +158,27 @@ class _AddClientScreenState extends State<AddClientScreen> {
   }
 
   Widget _buildPhoneLayout() {
-    return Column(
-      children: [
-        _buildTypeSelection(context),
-        const SizedBox(height: 16),
-        _buildPersonalInfo(),
-        const SizedBox(height: 16),
-        _buildSportsSelection(),
-        if (_selectedMemberType == MemberType.personal) ...[
+    return Padding(
+      padding: const EdgeInsets.symmetric( vertical: 20.0), // Add padding to the layout
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, // Align children to the start
+        children: [
+          _buildTypeSelection(context),
           const SizedBox(height: 16),
-          _buildTrainerSelection(),
+          _buildPersonalInfo(),
+          const SizedBox(height: 16),
+          _buildSportsSelection(),
+          if (_selectedMemberType == MemberType.personal) ...[
+            const SizedBox(height: 16),
+            _buildTrainerSelection(),
+          ],
+          const SizedBox(height: 16),
+          _buildNotes(),
         ],
-        const SizedBox(height: 16),
-        _buildNotes(),
-      ],
+      ),
     );
   }
+
 
   Widget _buildTypeSelection(BuildContext context) {
     return Column(
@@ -569,12 +574,6 @@ class _AddClientScreenState extends State<AddClientScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-      icon: _isLoading
-          ? CircularProgressIndicator(
-        color: Colors.white,
-        strokeWidth: 2,
-      )
-          : const Icon(Icons.add, color: Colors.white),
       label: _isLoading
           ? SizedBox(
         width: 16, // Adjust width to center spinner
