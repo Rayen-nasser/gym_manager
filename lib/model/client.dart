@@ -106,6 +106,24 @@ class Client {
     );
   }
 
+  Client updateMembershipExpiration(DateTime newExpirationDate) {
+    List<DateTime> updatedPaymentDates = List.from(paymentDates)..add(newExpirationDate);
+    return Client(
+      id: id,
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      phoneNumber: phoneNumber,
+      createdAt: createdAt,
+      membershipExpiration: newExpirationDate,
+      totalPaid: totalPaid,
+      paymentDates: updatedPaymentDates,
+      sports: sports,
+      assignedTrainerId: assignedTrainerId,
+      clientIds: clientIds,
+      notes: notes,
+    );
+  }
 
   // Add a client (for trainers only)
   Client? addClient(String clientId) {
@@ -126,4 +144,43 @@ class Client {
       notes: notes,
     );
   }
+
+  // Method to calculate the total price of all enrolled sports
+  double totalSportPrices() {
+    return sports.fold(0.0, (sum, sport) => sum + sport.price);
+  }
+
+  // Add a copyWith method
+  Client copyWith({
+    String? id,
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? phoneNumber,
+    DateTime? createdAt,
+    DateTime? membershipExpiration,
+    double? totalPaid,
+    List<DateTime>? paymentDates,
+    List<Sport>? sports,
+    String? assignedTrainerId,
+    List<String>? clientIds,
+    String? notes,
+  }) {
+    return Client(
+      id: id ?? this.id,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      createdAt: createdAt ?? this.createdAt,
+      membershipExpiration: membershipExpiration ?? this.membershipExpiration,
+      totalPaid: totalPaid ?? this.totalPaid,
+      paymentDates: paymentDates ?? this.paymentDates,
+      sports: sports ?? this.sports,
+      assignedTrainerId: assignedTrainerId ?? this.assignedTrainerId,
+      clientIds: clientIds ?? this.clientIds,
+      notes: notes ?? this.notes,
+    );
+  }
+
 }
