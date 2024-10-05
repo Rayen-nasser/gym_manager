@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart'; // Import this for date initialization
 import 'package:gym_energy/widgets/text_flied.dart';
 
@@ -27,7 +28,6 @@ class _AddClientScreenState extends State<AddClientScreen> {
   String? _selectedTrainerId;
   List<Sport> _selectedSports = [];
   bool _isLoading = false;
-
 
   @override
   void initState() {
@@ -63,7 +63,10 @@ class _AddClientScreenState extends State<AddClientScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (isTablet) _buildTabletLayout(constraints) else _buildPhoneLayout(),
+                    if (isTablet)
+                      _buildTabletLayout(constraints)
+                    else
+                      _buildPhoneLayout(),
                     const SizedBox(height: 24),
                     _buildSubmitButton(),
                   ],
@@ -86,22 +89,13 @@ class _AddClientScreenState extends State<AddClientScreen> {
           child: Card(
             elevation: 4,
             margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // // Section title: Personal Information
-                  // Text(
-                  //   Localization.membershipTranslations['personal_info'] ?? 'Personal Information',
-                  //   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  //     fontWeight: FontWeight.bold,
-                  //     color: Theme.of(context).colorScheme.primary,
-                  //   ),
-                  // ),
-                  // const SizedBox(height: 24),
-
                   // Membership type selection
                   _buildTypeSelection(context),
 
@@ -114,29 +108,19 @@ class _AddClientScreenState extends State<AddClientScreen> {
             ),
           ),
         ),
-
         // Right column for subscription details
         Expanded(
           flex: 2,
           child: Card(
             elevation: 4,
             margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Section title: Subscription Details
-                  // Text(
-                  //   Localization.membershipTranslations['subscription_details'] ?? 'Subscription Details',
-                  //   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  //     fontWeight: FontWeight.bold,
-                  //     color: Theme.of(context).colorScheme.primary,
-                  //   ),
-                  // ),
-                  // const SizedBox(height: 16),
-
                   // Sports selection
                   _buildSportsSelection(),
 
@@ -159,9 +143,11 @@ class _AddClientScreenState extends State<AddClientScreen> {
 
   Widget _buildPhoneLayout() {
     return Padding(
-      padding: const EdgeInsets.symmetric( vertical: 20.0), // Add padding to the layout
+      padding: const EdgeInsets.symmetric(
+          vertical: 20.0), // Add padding to the layout
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // Align children to the start
+        crossAxisAlignment:
+            CrossAxisAlignment.start, // Align children to the start
         children: [
           _buildTypeSelection(context),
           const SizedBox(height: 16),
@@ -179,22 +165,26 @@ class _AddClientScreenState extends State<AddClientScreen> {
     );
   }
 
-
   Widget _buildTypeSelection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Title for the membership type selection
         Text(
-          Localization.membershipTranslations['membership_type'] ?? 'Membership Type',
+          Localization.membershipTranslations['membership_type'] ??
+              'Membership Type',
           style: TextStyle(
             fontFamily: 'Cairo',
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Theme.of(context).textTheme.titleLarge?.color, // Theme color for text
+            color: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.color, // Theme color for text
           ),
         ),
-        const SizedBox(height: 12), // Spacing between title and segmented button
+        const SizedBox(
+            height: 12), // Spacing between title and segmented button
         // Segmented button for selecting membership type
         SegmentedButton<MemberType>(
           segments: [
@@ -206,7 +196,10 @@ class _AddClientScreenState extends State<AddClientScreen> {
                   fontFamily: 'Cairo', // Using Cairo font
                   fontWeight: FontWeight.w700, // Semi-bold style
                   fontSize: 16, // Adjust font size
-                  color: Theme.of(context).textTheme.bodyLarge?.backgroundColor, // Theme-based color
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.backgroundColor, // Theme-based color
                 ),
               ),
               icon: const Icon(Icons.person),
@@ -219,7 +212,10 @@ class _AddClientScreenState extends State<AddClientScreen> {
                   fontFamily: 'Cairo', // Using Cairo font
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
-                  color: Theme.of(context).textTheme.bodyLarge?.backgroundColor, // Theme-based color
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.backgroundColor, // Theme-based color
                 ),
               ),
               icon: const Icon(Icons.fitness_center),
@@ -237,16 +233,18 @@ class _AddClientScreenState extends State<AddClientScreen> {
           style: ButtonStyle(
             // Button background color based on the selected state
             backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                  (Set<MaterialState> states) {
+              (Set<MaterialState> states) {
                 if (states.contains(MaterialState.selected)) {
-                  return Theme.of(context).colorScheme.primary; // Gym theme primary color
+                  return Theme.of(context)
+                      .colorScheme
+                      .primary; // Gym theme primary color
                 }
                 return Colors.grey.shade200; // Default background color
               },
             ),
             // Button text color based on the selected state
             foregroundColor: MaterialStateProperty.resolveWith<Color>(
-                  (Set<MaterialState> states) {
+              (Set<MaterialState> states) {
                 if (states.contains(MaterialState.selected)) {
                   return Colors.white; // White text for selected button
                 }
@@ -260,153 +258,61 @@ class _AddClientScreenState extends State<AddClientScreen> {
   }
 
   Widget _buildPersonalInfo() {
-    return  Padding(
-        padding: const EdgeInsets.symmetric( vertical: 8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              Localization.membershipTranslations['personal_info']!,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.titleLarge?.color, // Theme-based text color
-              ),
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              controller: _firstNameController,
-              label: Localization.membershipTranslations['first_name']!,
-              icon: Icons.person_outline,
-              validator: (value) => value?.isEmpty ?? true ? Localization.membershipTranslations['enter_first_name'] : null,
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              controller: _lastNameController,
-              label: Localization.membershipTranslations['last_name']!,
-              icon: Icons.person_outline,
-              validator: (value) => value?.isEmpty ?? true ? Localization.membershipTranslations['enter_last_name'] : null,
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              controller: _emailController,
-              label: Localization.membershipTranslations['email']!,
-              icon: Icons.email_outlined,
-              validator: (value) {
-                if (value?.isEmpty ?? true) return Localization.membershipTranslations['enter_email'];
-                if (!value!.contains('@')) return Localization.membershipTranslations['enter_valid_email'];
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              controller: _phoneController,
-              label: Localization.membershipTranslations['phone']!,
-              icon: Icons.phone_outlined,
-              validator: (value) => value?.isEmpty ?? true ? Localization.membershipTranslations['enter_phone'] : null,
-            ),
-          ],
-        ),
-    );
-  }
-
-  Widget _buildTrainerSelection() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            Localization.membershipTranslations['select_trainer']!,
+            Localization.membershipTranslations['personal_info']!,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).textTheme.titleLarge?.color,
+              color: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.color, // Theme-based text color
             ),
           ),
           const SizedBox(height: 16),
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('trainers')
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
-
-              List<DropdownMenuItem<String>> trainerItems = [];
-              for (var doc in snapshot.data!.docs) {
-                var data = doc.data() as Map<String, dynamic>;
-
-                // Check if the trainer can teach any of the selected sports
-                List<dynamic> trainerSportsData = data['sports'] ?? []; // Adjusted to dynamic
-                List<String> trainerSports = trainerSportsData.map((sport) {
-                  // Assuming each sport is a map and you want to get the 'id'
-                  if (sport is Map<String, dynamic>) {
-                    return sport['id'] as String; // Ensure this returns a string ID
-                  }
-                  return ''; // Fallback if not a map
-                }).toList();
-
-                // Check if the trainer can teach any of the selected sports
-                bool canTeach = _selectedSports.any((sport) => trainerSports.contains(sport.id));
-
-                if (canTeach) {
-                  trainerItems.add(DropdownMenuItem(
-                    value: doc.id,
-                    child: Text(
-                      '${data['firstName']} ${data['lastName']}',
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
-                      ),
-                    ),
-                  ));
-                }
-              }
-
-              return DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: Localization.membershipTranslations['choose_trainer'],
-                  labelStyle: TextStyle(
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
-                  prefixIcon: Icon(Icons.fitness_center, color: Theme.of(context).iconTheme.color),
-                  filled: true,
-                  fillColor: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[850]
-                      : Colors.grey[200],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Theme.of(context).dividerColor),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.5)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
-                  ),
-                  errorStyle: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ),
-                value: _selectedTrainerId,
-                items: trainerItems.isNotEmpty ? trainerItems : null,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedTrainerId = newValue;
-                  });
-                },
-                validator: (value) =>
-                value == null ? Localization.membershipTranslations['choose_trainer'] : null,
-              );
+          CustomTextField(
+            controller: _firstNameController,
+            label: Localization.membershipTranslations['first_name']!,
+            icon: Icons.person_outline,
+            validator: (value) => value?.isEmpty ?? true
+                ? Localization.membershipTranslations['enter_first_name']
+                : null,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            controller: _lastNameController,
+            label: Localization.membershipTranslations['last_name']!,
+            icon: Icons.person_outline,
+            validator: (value) => value?.isEmpty ?? true
+                ? Localization.membershipTranslations['enter_last_name']
+                : null,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            controller: _emailController,
+            label: Localization.membershipTranslations['email']!,
+            icon: Icons.email_outlined,
+            validator: (value) {
+              if (value?.isEmpty ?? true)
+                return Localization.membershipTranslations['enter_email'];
+              if (!value!.contains('@'))
+                return Localization.membershipTranslations['enter_valid_email'];
+              return null;
             },
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            controller: _phoneController,
+            label: Localization.membershipTranslations['phone']!,
+            icon: Icons.phone_outlined,
+            validator: (value) => value?.isEmpty ?? true
+                ? Localization.membershipTranslations['enter_phone']
+                : null,
           ),
         ],
       ),
@@ -414,153 +320,233 @@ class _AddClientScreenState extends State<AddClientScreen> {
   }
 
   Widget _buildSportsSelection() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _selectedMemberType == MemberType.trainer
-                ? Localization.membershipTranslations['sports_to_teach']!
-                : Localization.membershipTranslations['sports_to_join']!,
-            style: TextStyle(
-              fontSize: 20, // Slightly larger for emphasis
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).textTheme.titleLarge?.color, // Using primary color for gym theme
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _selectedMemberType == MemberType.trainer
+              ? Localization.membershipTranslations['sports_to_teach']!
+              : Localization.membershipTranslations['sports_to_join']!,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).textTheme.titleLarge?.color,
           ),
-          const SizedBox(height: 16),
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('sports').snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: CircularProgressIndicator(),
+        ),
+        const SizedBox(height: 16),
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('sports').snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            return Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: snapshot.data!.docs.map((doc) {
+                var sport = Sport.fromMap(doc.data() as Map<String, dynamic>);
+                bool isSelected = _selectedSports.any((s) => s.id == sport.id);
+
+                return ChoiceChip(
+                  label: Text(
+                    sport.name,
+                    style: GoogleFonts.cairo(
+                      fontWeight: FontWeight.bold,
+                      color: isSelected
+                          ? Colors.white
+                          : Theme.of(context).textTheme.titleLarge?.color,
+                    ),
+                  ),
+                  selected: isSelected,
+                  onSelected: (bool selected) {
+                    setState(() {
+                      if (selected) {
+                        _selectedSports.add(sport);
+                      } else {
+                        _selectedSports.removeWhere((s) => s.id == sport.id);
+                      }
+                      // Reset trainer selection when sports change
+                      _selectedTrainerId = null;
+                    });
+                  },
+                  backgroundColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[800]
+                      : Colors.grey[200],
+                  selectedColor: Theme.of(context).colorScheme.primary,
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 );
-              }
-
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  return Wrap(
-                    spacing: 10, // Increased spacing for better readability
-                    runSpacing: 10,
-                    children: snapshot.data!.docs.map((doc) {
-                      var sport = Sport.fromMap(doc.data() as Map<String, dynamic>);
-                      bool isSelected = _selectedSports.any((s) => s.id == sport.id);
-
-                      return ChoiceChip(
-                        label: Text(
-                          sport.name,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color, // Text color based on selection
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        selected: isSelected,
-                        onSelected: (bool selected) {
-                          setState(() {
-                            if (selected) {
-                              _selectedSports.add(sport);
-                            } else {
-                              _selectedSports.removeWhere((s) => s.id == sport.id);
-                            }
-                          });
-                        },
-                        backgroundColor: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[800] // Dark mode background color for unselected chips
-                            : Colors.grey[200], // Light mode background color for unselected chips
-                        selectedColor: Theme.of(context).colorScheme.primary, // Primary color for selection
-                        elevation: 4, // Add elevation for shadow effect
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12), // Rounded corners
-                        ),
-                      );
-                    }).toList(),
-                  );
-                },
-              );
-            },
-          ),
-          if (_selectedSports.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                Localization.membershipTranslations['select_sport']!,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error, // Use theme error color
-                  fontSize: 14, // Slightly larger for better visibility
-                  fontWeight: FontWeight.w600,
-                ),
+              }).toList(),
+            );
+          },
+        ),
+        if (_selectedSports.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              Localization.membershipTranslations['select_sport']!,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
             ),
-        ],
-      ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTrainerSelection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          Localization.membershipTranslations['select_trainer']!,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).textTheme.titleLarge?.color,
+          ),
+        ),
+        const SizedBox(height: 16),
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('trainers').snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            List<DropdownMenuItem<String>> trainerItems = [];
+            for (var doc in snapshot.data!.docs) {
+              var data = doc.data() as Map<String, dynamic>;
+              List<dynamic> trainerSportsData = data['sports'] ?? [];
+              List<String> trainerSports = trainerSportsData.map((sport) {
+                if (sport is Map<String, dynamic>) {
+                  return sport['id'] as String;
+                }
+                return '';
+              }).toList();
+
+              bool canTeach = _selectedSports.any((sport) => trainerSports.contains(sport.id));
+
+              if (canTeach) {
+                trainerItems.add(DropdownMenuItem(
+                  value: doc.id,
+                  child: Text(
+                    '${data['firstName']} ${data['lastName']}',
+                    style: GoogleFonts.cairo(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
+                    ),
+                  ),
+                ));
+              }
+            }
+
+            return DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                labelText: Localization.membershipTranslations['choose_trainer'],
+                labelStyle: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+                prefixIcon: Icon(Icons.fitness_center,
+                    color: Theme.of(context).iconTheme.color),
+                filled: true,
+                fillColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[850]
+                    : Colors.grey[200],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.5),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.5),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.5),
+                  ),
+                ),
+                errorStyle: const TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 14,
+                  color: Colors.red,
+                ),
+              ),
+              value: _selectedTrainerId,
+              items: trainerItems.isNotEmpty ? trainerItems : null,
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedTrainerId = newValue;
+                });
+              },
+              validator: (value) {
+                bool isBodyBuildingSelected = _selectedSports.any(
+                      (sport) => sport.name == 'كمال الأجسام',
+                );
+
+                if (isBodyBuildingSelected) {
+                  return null;
+                }
+
+                if (value == null && _selectedSports.isNotEmpty) {
+                  return Localization.membershipTranslations['choose_trainer'];
+                }
+
+                return null;
+              },
+            );
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildNotes() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            Localization.membershipTranslations['additional_notes']!,
-            style: TextStyle(
-              fontSize: 20, // Slightly larger for better emphasis
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).textTheme.titleLarge?.color,  // Using primary color for theme
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          Localization.membershipTranslations['additional_notes']!,
+          style: TextStyle(
+            fontSize: 20, // Slightly larger for better emphasis
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.color, // Using primary color for theme
           ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _notesController,
-            decoration: InputDecoration(
-              labelText: Localization.membershipTranslations['notes'],
-              labelStyle: TextStyle(
-                color: Theme.of(context).colorScheme.onBackground, // Using theme's secondary color for label
-              ),
-              prefixIcon: Icon(Icons.note_outlined, color: Theme.of(context).iconTheme.color), // Theme-based icon color
-              hintText: Localization.membershipTranslations['add_notes'],
-              hintStyle: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), // Faded hint text
-              ),
-              filled: true,
-              fillColor: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[850] // Dark mode fill color
-                  : Colors.grey[200], // Light mode fill color
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12), // Rounded corners
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), // Subtle border color
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.primary, // Primary color on focus
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), // Subtle border color
-                ),
-              ),
-            ),
-            maxLines: 3,
-            textAlign: TextAlign.start, // Align text to start for better readability
-            style: TextStyle(
-              fontFamily: 'Cairo', // Use Cairo font family
-              fontSize: 16, // Consistent font size for text input
-              color: Theme.of(context).textTheme.bodyLarge?.color, // Text color from theme
-            ),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        CustomTextField(
+          controller: _notesController,
+          label: Localization.membershipTranslations['notes']!,
+          icon: Icons.note_outlined,
+          validator: (value) {
+            // Define your validation logic if needed, or return null if validation is not required
+            return null;
+          },
+          maxLines: 4,
+        ),
+      ],
     );
   }
 
@@ -576,26 +562,27 @@ class _AddClientScreenState extends State<AddClientScreen> {
       ),
       label: _isLoading
           ? SizedBox(
-        width: 16, // Adjust width to center spinner
-        height: 16, // Adjust height to center spinner
-        child: CircularProgressIndicator(
-          color: Colors.white,
-          strokeWidth: 2,
-        ),
-      )
+              width: 16, // Adjust width to center spinner
+              height: 16, // Adjust height to center spinner
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
           : Text(
-        Localization.membershipTranslations['add_client_button']!,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-          fontFamily: 'Cairo', // Use Cairo font family
-        ),
-      ),
+              Localization.membershipTranslations['add_client_button']!,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontFamily: 'Cairo', // Use Cairo font family
+              ),
+            ),
     );
   }
 
   Future<void> _submitForm() async {
+    // Validate the form first
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -606,6 +593,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
       return;
     }
 
+    // Ensure a sport is selected
     if (_selectedSports.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -616,10 +604,14 @@ class _AddClientScreenState extends State<AddClientScreen> {
       return;
     }
 
+    // Set loading state to true
     setState(() => _isLoading = true);
 
     try {
+      // Calculate the total paid based on selected sports
       double totalPaid = await _calculateTotalPaid(_selectedSports);
+
+      // Create the client object
       final client = Client(
         id: '',
         firstName: _firstNameController.text,
@@ -631,19 +623,28 @@ class _AddClientScreenState extends State<AddClientScreen> {
         totalPaid: totalPaid,
         paymentDates: [],
         sports: _selectedSports,
-        assignedTrainerId: _selectedMemberType == MemberType.personal ? _selectedTrainerId : null,
         clientIds: _selectedMemberType == MemberType.trainer ? [] : null,
         notes: _notesController.text,
       );
 
+      // Add the client to Firestore
       if (_selectedMemberType == MemberType.trainer) {
+        // Save client as a trainer
         await FirebaseFirestore.instance.collection('trainers').add(client.toMap());
       } else {
-        DocumentReference clientDocRef = await FirebaseFirestore.instance.collection('clients').add(client.toMap());
+        // Save client as a regular client
+        DocumentReference clientDocRef = await FirebaseFirestore.instance
+            .collection('clients')
+            .add(client.toMap());
         String newClientId = clientDocRef.id;
-        await _addClientToTrainer(newClientId, _selectedTrainerId!);
+
+        // Check if a trainer is selected and the sport is NOT "كمال الاجسام" (Bodybuilding)
+        if (_selectedTrainerId != null) {
+          await _addClientToTrainer(newClientId, _selectedTrainerId!);
+        }
       }
 
+      // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -660,6 +661,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
+      // Handle error and show error message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -675,9 +677,11 @@ class _AddClientScreenState extends State<AddClientScreen> {
         );
       }
     } finally {
-      setState(() => _isLoading = false); // Ensure loading state resets
+      // Reset loading state
+      setState(() => _isLoading = false);
     }
   }
+
 
   // Function to calculate the total paid based on selected sports
   Future<double> _calculateTotalPaid(List<Sport> selectedSports) async {
@@ -694,8 +698,12 @@ class _AddClientScreenState extends State<AddClientScreen> {
   // Function to add the client ID to the trainer's client list
   Future<void> _addClientToTrainer(String clientId, String trainerId) async {
     // Update the trainer's document with the new client ID
-    await FirebaseFirestore.instance.collection('trainers').doc(trainerId).update({
-      'clientIds': FieldValue.arrayUnion([clientId]), // Add client ID to the list
+    await FirebaseFirestore.instance
+        .collection('trainers')
+        .doc(trainerId)
+        .update({
+      'clientIds':
+          FieldValue.arrayUnion([clientId]), // Add client ID to the list
     });
   }
 

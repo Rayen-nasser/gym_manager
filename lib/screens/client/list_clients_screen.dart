@@ -1,70 +1,94 @@
 import 'package:flutter/material.dart';
 import 'package:gym_energy/screens/client/add_edit_client_screen.dart';
-import 'package:gym_energy/widgets/client_cart_widget.dart';
-import 'package:gym_energy/model/client.dart' as client_model; // Import your client model
+import 'package:gym_energy/model/client.dart' as client_model;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../widgets/client_cart_widget.dart';
+
 class ClientsScreen extends StatelessWidget {
-  const ClientsScreen({super.key});
+  const ClientsScreen({Key? key}) : super(key: key);
+
 
   @override
   Widget build(BuildContext context) {
-    // Determine screen width
     final screenWidth = MediaQuery.of(context).size.width;
-    bool isTablet = screenWidth > 600;
+    final isTablet = screenWidth > 600;
 
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 6),
         child: FutureBuilder<List<client_model.Client>>(
-          future: _fetchClients(), // Fetch clients from Firestore
+          future: _fetchClients(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator()); // Loading state
+              // Fix the color of CircularProgressIndicator to use theme's onBackground color
+              return Center(
+                child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.onBackground,
+                ),
+              );
             } else if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}')); // Error state
+              return Center(
+                child: Text('خطأ: ${snapshot.error}',
+                    style: const TextStyle(fontFamily: 'Cairo')),
+              );
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: Text("لم يتم العثور على أي عملاء")); // No data state
+              return const Center(
+                child: Text("لم يتم العثور على أي عملاء",
+                    style: TextStyle(fontFamily: 'Cairo')),
+              );
             }
 
-            final clients = snapshot.data!; // Get the clients list
+            final clients = snapshot.data!;
 
-            return GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: isTablet ? 3 : 1, // 3 items in a row for tablets, 1 for phones
-                childAspectRatio: isTablet ? 1.1 : 1.3, // Adjust aspect ratio as needed
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
+            return Container(
+              margin:  EdgeInsets.only(top: (isTablet ? 16 : 8), bottom:  (isTablet ? 16 : 8)), // Top and bottom margin
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isTablet ? 2 : 1,
+                  childAspectRatio: isTablet ? 1.2 : 1,
+                  crossAxisSpacing: isTablet ? 0 : 0, // Horizontal gap
+                  mainAxisSpacing: isTablet ? 10 : 0,  // Vertical gap
+                ),
+                itemCount: clients.length,
+                itemBuilder: (context, index) {
+                  return ClientCartWidget(
+                    client: clients[index],
+                  );
+                },
               ),
-              itemCount: clients.length,
-              itemBuilder: (context, index) {
-                return ClientCartWidget(
-                  client: clients[index],
-                );
-              },
             );
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddClientScreen()),
-          );
-        },
+
+      // FloatingActionButton positioned on the left
+      floatingActionButton:
+           FloatingActionButton(
+        onPressed: () => _navigateToAddClientScreen(context),
         child: const Icon(Icons.add),
         tooltip: 'إضافة عضو جديد',
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat, // Positioned on the left
     );
   }
 
   Future<List<client_model.Client>> _fetchClients() async {
-    final snapshot = await FirebaseFirestore.instance.collection('clients').get();
-    return snapshot.docs.map((doc) {
-      // Use fromMap to convert Firestore document to Client instance
+    final clientSnapshot = await FirebaseFirestore.instance.collection('clients').get();
+    final trainerSnapshot = await FirebaseFirestore.instance.collection('trainers').get();
+
+    final allDocs = [...clientSnapshot.docs, ...trainerSnapshot.docs];
+
+    return allDocs.map((doc) {
       return client_model.Client.fromMap(doc.data() as Map<String, dynamic>, doc.id);
     }).toList();
+  }
+
+  void _navigateToAddClientScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddClientScreen()),
+    );
   }
 }

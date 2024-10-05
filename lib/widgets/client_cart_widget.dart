@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../model/client.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
+import '../model/client.dart';
 
 class ClientCartWidget extends StatelessWidget {
   final Client client;
@@ -13,105 +15,257 @@ class ClientCartWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
     bool isMembershipExpired = client.membershipExpiration.isBefore(DateTime.now());
 
     return Card(
-      elevation: 4,
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      margin: EdgeInsets.symmetric(vertical: (isTablet ? 10 : 12), horizontal: (isTablet ? 16 : 0)),
+      child: InkWell(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Client Information
-            Text(
-              '${client.firstName} ${client.lastName}',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Cairo',
+            _buildHeader(context, isMembershipExpired, isTablet),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.all(isTablet ? 20 : 16), // Adjust padding for tablets
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isTablet) ...[
+                        _buildInfoRow(Icons.email, 'البريد الإلكتروني:', client.email, context),
+                        const SizedBox(height: 8),
+                        _buildInfoRow(Icons.phone, 'رقم الهاتف:', client.phoneNumber, context),
+                        const SizedBox(height: 8),
+                      ],
+                      _buildMembershipInfo(context, isMembershipExpired),
+                      const SizedBox(height: 16),
+                      _buildTotalPaid(context, isTablet), // Pass isTablet here
+                      const SizedBox(height: 16),
+                      _buildActionButtons(context, isMembershipExpired),
+                    ],
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'البريد الإلكتروني: ${client.email}',
-              style: const TextStyle(fontSize: 16, fontFamily: 'Cairo'),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'رقم الهاتف: ${client.phoneNumber}',
-              style: const TextStyle(fontSize: 16, fontFamily: 'Cairo'),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'تاريخ انتهاء العضوية: ${client.membershipExpiration.toLocal().toString().split(' ')[0]}',
-              style: TextStyle(
-                fontSize: 16,
-                color: isMembershipExpired ? Colors.red : Theme.of(context).colorScheme.onBackground,
-                fontFamily: 'Cairo',
-              ),
-            ),
-            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
 
-            // Total Paid
-            Text(
-              'إجمالي المدفوع: ${client.totalSportPrices().toStringAsFixed(2)} دينار ',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Cairo',
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Action Icons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  Widget _buildHeader(BuildContext context, bool isMembershipExpired, bool isTablet) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _buildIconButton(
-                    icon: Icons.email,
-                    label: 'Email',
-                    onPressed: () => _launchEmail(context, client.email),
-                    context: context,
+                Text(
+                  '${client.firstName} ${client.lastName}',
+                  style: TextStyle(
+                    fontSize: isTablet ? 24 : 20, // Adjust font size for tablets
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontFamily: 'Cairo',
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                _buildMembershipStatus(isMembershipExpired),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMembershipStatus(bool isExpired) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isExpired ? Colors.red : Colors.green,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        isExpired ? 'منتهية الصلاحية' : 'نشطة',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Cairo',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value, BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: Colors.grey[600]),
+        const SizedBox(width: 8),
+        Flexible(
+          child: RichText(
+            text: TextSpan(
+              style: GoogleFonts.cairo(
+                color: Colors.black, // Default text color
+              ),
+              children: [
+                TextSpan(
+                  text: '$label ',
+                  style: GoogleFonts.cairo(
+                    fontSize: 14,
+                    color: Colors.grey[600], // Color for the label
                   ),
                 ),
-                Expanded(
-                  child: _buildIconButton(
-                    icon: Icons.call,
-                    label: 'Call',
-                    onPressed: () => _launchCall(context, client.phoneNumber),
-                    context: context,
-                  ),
-                ),
-                Expanded(
-                  child: _buildIconButton(
-                    icon: Icons.refresh,
-                    label: 'Renew',
-                    // Disable renew button if the membership is not expired
-                    onPressed: isMembershipExpired
-                        ? () => _renewMembership(context)
-                        : () {
-                      _showMembershipActiveMessage(context);
-                    },
-                    context: context,
+                TextSpan(
+                  text: value,
+                  style: GoogleFonts.cairo(
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.onBackground, // Using onBackground from theme
                   ),
                 ),
               ],
             ),
-            if (isMembershipExpired) ...[
-              const SizedBox(height: 8),
-              Text(
-                'انتهت صلاحية العضوية!',
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Cairo',
-                ),
-              ),
-            ],
-          ],
+            overflow: TextOverflow.ellipsis, // Ensures the text doesn't overflow
+          ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildMembershipInfo(BuildContext context, bool isExpired) {
+    final expirationDate = DateFormat('yyyy-MM-dd').format(client.membershipExpiration);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isExpired ? Colors.red[50] : Colors.green[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: isExpired ? Colors.red : Colors.green),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isExpired ? Icons.warning : Icons.check_circle,
+            color: isExpired ? Colors.red : Colors.green,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'تاريخ انتهاء العضوية: $expirationDate',
+              style: TextStyle(
+                fontSize: 14,
+                color: isExpired ? Colors.red[700] : Colors.green[700],
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Cairo',
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTotalPaid(BuildContext context, bool isTablet) { // Add isTablet parameter
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'إجمالي المدفوع:',
+            style: TextStyle(
+              fontSize: isTablet ? 14 : 18, // Adjust font size for tablets
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Cairo',
+              color: Colors.blue,
+            ),
+          ),
+          Text(
+            '${client.totalSportPrices().toStringAsFixed(2)} دينار',
+            style: TextStyle(
+              fontSize: isTablet ? 14 : 18, // Adjust font size for tablets
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+              fontFamily: 'Cairo',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, bool isExpired) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildActionButton(
+            context: context,
+            icon: Icons.email,
+            label: 'البريد',
+            onPressed: () => _launchEmail(context, client.email),
+            color: Colors.blue,
+          ),
+          const SizedBox(width: 8),
+          _buildActionButton(
+            context: context,
+            icon: Icons.call,
+            label: 'اتصال',
+            onPressed: () => _launchCall(context, client.phoneNumber),
+            color: Colors.green,
+          ),
+          const SizedBox(width: 8),
+          _buildActionButton(
+            context: context,
+            icon: Icons.refresh,
+            label: 'تجديد',
+            onPressed: isExpired
+                ? () => _renewMembership(context)
+                : () => _showMembershipActiveMessage(context),
+            color: Colors.orange,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    required Color color,
+  }) {
+    return ElevatedButton.icon(
+      icon: Icon(icon, color: Colors.white, size: 18),
+      label: Text(
+        label,
+        style: const TextStyle(color: Colors.white, fontFamily: 'Cairo', fontSize: 12),
+      ),
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
     );
   }
@@ -133,13 +287,26 @@ class ClientCartWidget extends StatelessWidget {
       if (await canLaunchUrl(emailUri)) {
         await launchUrl(emailUri);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No email client found')),
-        );
+        throw 'Could not launch $emailUri';
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not launch email app: $e')),
+        SnackBar(content: Text('خطأ: $e')),
+      );
+    }
+  }
+
+  void _launchCall(BuildContext context, String phoneNumber) async {
+    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+    try {
+      if (await canLaunchUrl(phoneUri)) {
+        await launchUrl(phoneUri);
+      } else {
+        throw 'Could not launch $phoneUri';
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطأ: $e')),
       );
     }
   }
@@ -166,50 +333,5 @@ class ClientCartWidget extends StatelessWidget {
         SnackBar(content: Text('فشل تجديد العضوية: $e')),
       );
     }
-  }
-
-  void _launchCall(BuildContext context, String phoneNumber) async {
-    final Uri callUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
-    );
-
-    try {
-      if (await canLaunchUrl(callUri)) {
-        await launchUrl(callUri);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch phone app')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not launch phone app: $e')),
-      );
-    }
-  }
-
-  Widget _buildIconButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-    required BuildContext context,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          icon: Icon(icon, color: Theme.of(context).colorScheme.secondary),
-          onPressed: onPressed,
-        ),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontFamily: 'Cairo',
-          ),
-        ),
-      ],
-    );
   }
 }
