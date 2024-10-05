@@ -14,12 +14,10 @@ class Client {
   final String phoneNumber;
   final DateTime createdAt;
   final DateTime membershipExpiration;
-  final MemberType memberType;
 
   // Payment tracking (cash only)
   final double totalPaid;
   final List<DateTime> paymentDates;
-  final DateTime nextPaymentDate;
 
   // Sports/Training information
   final List<Sport> sports; // For personal: enrolled sports, For trainer: sports they teach
@@ -37,10 +35,8 @@ class Client {
     required this.phoneNumber,
     required this.createdAt,
     required this.membershipExpiration,
-    required this.memberType,
     required this.totalPaid,
     required this.paymentDates,
-    required this.nextPaymentDate,
     required this.sports,
     this.assignedTrainerId,
     this.clientIds,
@@ -51,8 +47,6 @@ class Client {
 
   bool get isActive => membershipExpiration.isAfter(DateTime.now());
 
-  bool get isTrainer => memberType == MemberType.trainer;
-
   factory Client.fromMap(Map<String, dynamic> data, String documentId) {
     return Client(
       id: documentId,
@@ -62,15 +56,10 @@ class Client {
       phoneNumber: data['phoneNumber'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       membershipExpiration: (data['membershipExpiration'] as Timestamp).toDate(),
-      memberType: MemberType.values.firstWhere(
-            (e) => e.toString() == data['memberType'],
-        orElse: () => MemberType.personal,
-      ),
       totalPaid: (data['totalPaid'] ?? 0.0).toDouble(),
       paymentDates: (data['paymentDates'] as List<dynamic>? ?? [])
           .map((date) => (date as Timestamp).toDate())
           .toList(),
-      nextPaymentDate: (data['nextPaymentDate'] as Timestamp).toDate(),
       sports: (data['sports'] as List<dynamic>? ?? [])
           .map((item) => Sport.fromMap(item as Map<String, dynamic>))
           .toList(),
@@ -88,10 +77,8 @@ class Client {
       'phoneNumber': phoneNumber,
       'createdAt': Timestamp.fromDate(createdAt),
       'membershipExpiration': Timestamp.fromDate(membershipExpiration),
-      'memberType': memberType.toString(),
       'totalPaid': totalPaid,
       'paymentDates': paymentDates.map((date) => Timestamp.fromDate(date)).toList(),
-      'nextPaymentDate': Timestamp.fromDate(nextPaymentDate),
       'sports': sports.map((sport) => sport.toMap()).toList(),
       'assignedTrainerId': assignedTrainerId,
       'clientIds': clientIds,
@@ -110,10 +97,8 @@ class Client {
       phoneNumber: phoneNumber,
       createdAt: createdAt,
       membershipExpiration: membershipExpiration,
-      memberType: memberType,
       totalPaid: totalPaid + amount,
       paymentDates: updatedPaymentDates,
-      nextPaymentDate: calculateNextPaymentDate(paymentDate),
       sports: sports,
       assignedTrainerId: assignedTrainerId,
       clientIds: clientIds,
@@ -121,15 +106,9 @@ class Client {
     );
   }
 
-  // Calculate next payment date (30 days from last payment)
-  DateTime calculateNextPaymentDate(DateTime lastPaymentDate) {
-    return lastPaymentDate.add(const Duration(days: 30));
-  }
 
   // Add a client (for trainers only)
   Client? addClient(String clientId) {
-    if (memberType != MemberType.trainer) return null;
-
     List<String> updatedClientIds = List.from(clientIds ?? [])..add(clientId);
     return Client(
       id: id,
@@ -139,10 +118,8 @@ class Client {
       phoneNumber: phoneNumber,
       createdAt: createdAt,
       membershipExpiration: membershipExpiration,
-      memberType: memberType,
       totalPaid: totalPaid,
       paymentDates: paymentDates,
-      nextPaymentDate: nextPaymentDate,
       sports: sports,
       assignedTrainerId: assignedTrainerId,
       clientIds: updatedClientIds,

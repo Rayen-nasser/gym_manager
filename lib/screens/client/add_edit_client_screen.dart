@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart'; // Import this for date initialization
+import 'package:gym_energy/widgets/text_flied.dart';
+
+import '../../localization.dart';
+import '../../model/client.dart';
+import '../../model/sport.dart';
 
 class AddClientScreen extends StatefulWidget {
   const AddClientScreen({Key? key}) : super(key: key);
@@ -17,7 +21,6 @@ class _AddClientScreenState extends State<AddClientScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
-  final _paymentController = TextEditingController();
 
   MemberType _selectedMemberType = MemberType.personal;
   DateTime _membershipExpiration = DateTime.now().add(const Duration(days: 30));
@@ -25,46 +28,6 @@ class _AddClientScreenState extends State<AddClientScreen> {
   List<Sport> _selectedSports = [];
   bool _isLoading = false;
 
-  // Theme colors
-  final primaryColor = Colors.blue.shade800;
-  final secondaryColor = Colors.blue.shade100;
-
-  // Arabic translations
-  final translations = {
-    'new_client': 'إضافة عميل جديد',
-    'loading': 'جاري المعالجة...',
-    'membership_type': 'نوع العضوية',
-    'trainee': 'متدرب',
-    'trainer': 'مدرب',
-    'personal_info': 'المعلومات الشخصية',
-    'first_name': 'الاسم الأول',
-    'last_name': 'اسم العائلة',
-    'email': 'البريد الإلكتروني',
-    'phone': 'رقم الهاتف',
-    'enter_first_name': 'الرجاء إدخال الاسم الأول',
-    'enter_last_name': 'الرجاء إدخال اسم العائلة',
-    'enter_email': 'الرجاء إدخال البريد الإلكتروني',
-    'enter_valid_email': 'الرجاء إدخال بريد إلكتروني صحيح',
-    'enter_phone': 'الرجاء إدخال رقم الهاتف',
-    'membership_details': 'تفاصيل العضوية',
-    'expiry_date': 'تاريخ انتهاء العضوية',
-    'initial_payment': 'مبلغ الدفع الأولي',
-    'currency': 'ر.س',
-    'enter_amount': 'الرجاء إدخال مبلغ الدفع',
-    'enter_valid_amount': 'الرجاء إدخال مبلغ صحيح',
-    'select_trainer': 'اختيار المدرب',
-    'choose_trainer': 'الرجاء اختيار المدرب',
-    'sports_to_teach': 'الرياضات التي يقوم بتدريبها',
-    'sports_to_join': 'الرياضات المراد الاشتراك بها',
-    'select_sport': 'الرجاء اختيار رياضة واحدة على الأقل',
-    'additional_notes': 'ملاحظات إضافية',
-    'notes': 'ملاحظات',
-    'add_notes': 'أضف أي ملاحظات إضافية هنا',
-    'add_client_button': 'إضافة العميل',
-    'fill_required': 'الرجاء تعبئة جميع الحقول المطلوبة',
-    'success': 'تمت إضافة العميل بنجاح',
-    'error': 'حدث خطأ أثناء إضافة العميل',
-  };
 
   @override
   void initState() {
@@ -79,107 +42,117 @@ class _AddClientScreenState extends State<AddClientScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen size
-    final size = MediaQuery.of(context).size;
-    final isTablet = size.shortestSide >= 600;
-
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: primaryColor,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         title: Text(
-          translations['new_client'] ?? 'عميل جديد',
+          Localization.membershipTranslations['new_client'] ?? 'عميل جديد',
         ),
       ),
-      body: _isLoading
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: primaryColor),
-            const SizedBox(height: 16),
-            Text(translations['loading']!),
-          ],
-        ),
-      )
-          : Theme(
-        data: Theme.of(context).copyWith(
-          inputDecorationTheme: InputDecorationTheme(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: primaryColor.withOpacity(0.3)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.grey.shade50,
-          ),
-        ),
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isTablet ? constraints.maxWidth * 0.1 : 16.0,
-                  vertical: 16.0,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final isTablet = constraints.maxWidth >= 600;
+            return SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? constraints.maxWidth * 0.05 : 16.0,
+                vertical: 16.0,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (isTablet) _buildTabletLayout(constraints) else _buildPhoneLayout(),
+                    const SizedBox(height: 24),
+                    _buildSubmitButton(),
+                  ],
                 ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (isTablet) _buildTabletLayout() else _buildPhoneLayout(),
-                      const SizedBox(height: 24),
-                      _buildSubmitButton(),
-                      const SizedBox(height: 32),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildTabletLayout() {
-    return Column(
+  Widget _buildTabletLayout(BoxConstraints constraints) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
+        // Left column for personal information
+        Expanded(
+          flex: 3,
+          child: Card(
+            elevation: 4,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildTypeSelection(),
-                  const SizedBox(height: 16),
+                  // // Section title: Personal Information
+                  // Text(
+                  //   Localization.membershipTranslations['personal_info'] ?? 'Personal Information',
+                  //   style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  //     fontWeight: FontWeight.bold,
+                  //     color: Theme.of(context).colorScheme.primary,
+                  //   ),
+                  // ),
+                  // const SizedBox(height: 24),
+
+                  // Membership type selection
+                  _buildTypeSelection(context),
+
+                  const SizedBox(height: 24),
+
+                  // Personal information form
                   _buildPersonalInfo(),
                 ],
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
+          ),
+        ),
+
+        // Right column for subscription details
+        Expanded(
+          flex: 2,
+          child: Card(
+            elevation: 4,
+            margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildMembershipDetails(),
+                  // Section title: Subscription Details
+                  // Text(
+                  //   Localization.membershipTranslations['subscription_details'] ?? 'Subscription Details',
+                  //   style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  //     fontWeight: FontWeight.bold,
+                  //     color: Theme.of(context).colorScheme.primary,
+                  //   ),
+                  // ),
+                  // const SizedBox(height: 16),
+
+                  // Sports selection
+                  _buildSportsSelection(),
+
+                  // Conditional rendering based on member type
                   if (_selectedMemberType == MemberType.personal) ...[
                     const SizedBox(height: 16),
                     _buildTrainerSelection(),
                   ],
+                  const SizedBox(height: 24),
+                  // Additional notes section
+                  _buildNotes(),
                 ],
               ),
             ),
-          ],
+          ),
         ),
-        const SizedBox(height: 16),
-        _buildSportsSelection(),
-        const SizedBox(height: 16),
-        _buildNotes(),
       ],
     );
   }
@@ -187,87 +160,108 @@ class _AddClientScreenState extends State<AddClientScreen> {
   Widget _buildPhoneLayout() {
     return Column(
       children: [
-        _buildTypeSelection(),
+        _buildTypeSelection(context),
         const SizedBox(height: 16),
         _buildPersonalInfo(),
         const SizedBox(height: 16),
-        _buildMembershipDetails(),
+        _buildSportsSelection(),
         if (_selectedMemberType == MemberType.personal) ...[
           const SizedBox(height: 16),
           _buildTrainerSelection(),
         ],
-        const SizedBox(height: 16),
-        _buildSportsSelection(),
         const SizedBox(height: 16),
         _buildNotes(),
       ],
     );
   }
 
-  Widget _buildTypeSelection() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              translations['membership_type']!,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  Widget _buildTypeSelection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title for the membership type selection
+        Text(
+          Localization.membershipTranslations['membership_type'] ?? 'Membership Type',
+          style: TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).textTheme.titleLarge?.color, // Theme color for text
+          ),
+        ),
+        const SizedBox(height: 12), // Spacing between title and segmented button
+        // Segmented button for selecting membership type
+        SegmentedButton<MemberType>(
+          segments: [
+            ButtonSegment(
+              value: MemberType.personal,
+              label: Text(
+                Localization.membershipTranslations['trainee'] ?? 'Trainee',
+                style: TextStyle(
+                  fontFamily: 'Cairo', // Using Cairo font
+                  fontWeight: FontWeight.w700, // Semi-bold style
+                  fontSize: 16, // Adjust font size
+                  color: Theme.of(context).textTheme.bodyLarge?.backgroundColor, // Theme-based color
+                ),
+              ),
+              icon: const Icon(Icons.person),
             ),
-            const SizedBox(height: 8),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                return SegmentedButton<MemberType>(
-                  segments: [
-                    ButtonSegment(
-                      value: MemberType.personal,
-                      label: Text(translations['trainee']!),
-                      icon: const Icon(Icons.person),
-                    ),
-                    ButtonSegment(
-                      value: MemberType.trainer,
-                      label: Text(translations['trainer']!),
-                      icon: const Icon(Icons.fitness_center),
-                    ),
-                  ],
-                  selected: {_selectedMemberType},
-                  onSelectionChanged: (Set<MemberType> selection) {
-                    setState(() {
-                      _selectedMemberType = selection.first;
-                      if (_selectedMemberType == MemberType.trainer) {
-                        _selectedTrainerId = null;
-                      }
-                    });
-                  },
-                  style: ButtonStyle(
-                    fixedSize: MaterialStateProperty.all(
-                      Size.fromHeight(constraints.maxWidth > 300 ? 48 : 40),
-                    ),
-                  ),
-                );
-              },
+            ButtonSegment(
+              value: MemberType.trainer,
+              label: Text(
+                Localization.membershipTranslations['trainer'] ?? 'Trainer',
+                style: TextStyle(
+                  fontFamily: 'Cairo', // Using Cairo font
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: Theme.of(context).textTheme.bodyLarge?.backgroundColor, // Theme-based color
+                ),
+              ),
+              icon: const Icon(Icons.fitness_center),
             ),
           ],
+          selected: {_selectedMemberType},
+          onSelectionChanged: (Set<MemberType> selection) {
+            setState(() {
+              _selectedMemberType = selection.first;
+              if (_selectedMemberType == MemberType.trainer) {
+                _selectedTrainerId = null;
+              }
+            });
+          },
+          style: ButtonStyle(
+            // Button background color based on the selected state
+            backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                  (Set<MaterialState> states) {
+                if (states.contains(MaterialState.selected)) {
+                  return Theme.of(context).colorScheme.primary; // Gym theme primary color
+                }
+                return Colors.grey.shade200; // Default background color
+              },
+            ),
+            // Button text color based on the selected state
+            foregroundColor: MaterialStateProperty.resolveWith<Color>(
+                  (Set<MaterialState> states) {
+                if (states.contains(MaterialState.selected)) {
+                  return Colors.white; // White text for selected button
+                }
+                return Colors.black87; // Default text color
+              },
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildPersonalInfo() {
-    return Card(
-      elevation: 4,
-      color: Theme.of(context).cardColor, // Use theme card color
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+    return  Padding(
+        padding: const EdgeInsets.symmetric( vertical: 8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              translations['personal_info']!,
+              Localization.membershipTranslations['personal_info']!,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -275,412 +269,328 @@ class _AddClientScreenState extends State<AddClientScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            _buildTextField(
+            CustomTextField(
               controller: _firstNameController,
-              label: translations['first_name']!,
+              label: Localization.membershipTranslations['first_name']!,
               icon: Icons.person_outline,
-              validator: (value) => value?.isEmpty ?? true ? translations['enter_first_name'] : null,
+              validator: (value) => value?.isEmpty ?? true ? Localization.membershipTranslations['enter_first_name'] : null,
             ),
             const SizedBox(height: 16),
-            _buildTextField(
+            CustomTextField(
               controller: _lastNameController,
-              label: translations['last_name']!,
+              label: Localization.membershipTranslations['last_name']!,
               icon: Icons.person_outline,
-              validator: (value) => value?.isEmpty ?? true ? translations['enter_last_name'] : null,
+              validator: (value) => value?.isEmpty ?? true ? Localization.membershipTranslations['enter_last_name'] : null,
             ),
             const SizedBox(height: 16),
-            _buildTextField(
+            CustomTextField(
               controller: _emailController,
-              label: translations['email']!,
+              label: Localization.membershipTranslations['email']!,
               icon: Icons.email_outlined,
               validator: (value) {
-                if (value?.isEmpty ?? true) return translations['enter_email'];
-                if (!value!.contains('@')) return translations['enter_valid_email'];
+                if (value?.isEmpty ?? true) return Localization.membershipTranslations['enter_email'];
+                if (!value!.contains('@')) return Localization.membershipTranslations['enter_valid_email'];
                 return null;
               },
             ),
             const SizedBox(height: 16),
-            _buildTextField(
+            CustomTextField(
               controller: _phoneController,
-              label: translations['phone']!,
+              label: Localization.membershipTranslations['phone']!,
               icon: Icons.phone_outlined,
-              validator: (value) => value?.isEmpty ?? true ? translations['enter_phone'] : null,
+              validator: (value) => value?.isEmpty ?? true ? Localization.membershipTranslations['enter_phone'] : null,
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    required String? Function(String?) validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: Theme.of(context).iconTheme.color), // Theme-based icon color
-        filled: true,
-        fillColor: Theme.of(context).brightness == Brightness.dark
-            ? Colors.grey[850] // Dark mode fill color
-            : Colors.grey[200], // Light mode fill color
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).dividerColor), // Theme-based border color
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.5)), // Lighter border
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2), // Focused border color
-        ),
-        labelStyle: TextStyle(
-          color: Theme.of(context).textTheme.bodyLarge?.color, // Theme-based label color
-        ),
-      ),
-      validator: validator,
-    );
-  }
-
-
-  Widget _buildMembershipDetails() {
-    return Card(
-      elevation: 2,
-      color: Theme.of(context).cardColor, // Use theme card color
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              translations['membership_details']!,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.titleLarge?.color, // Theme-based text color
-              ),
-            ),
-            const SizedBox(height: 16),
-            InkWell(
-              onTap: () async {
-                final DateTime? picked = await showDatePicker(
-                  context: context,
-                  initialDate: _membershipExpiration,
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
-                );
-                if (picked != null) {
-                  setState(() => _membershipExpiration = picked);
-                }
-              },
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  labelText: translations['expiry_date'],
-                  prefixIcon: Icon(Icons.calendar_today, color: Theme.of(context).iconTheme.color), // Theme-based icon color
-                  filled: true,
-                  fillColor: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[850] // Dark mode fill color
-                      : Colors.grey[200], // Light mode fill color
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Theme.of(context).dividerColor), // Theme-based border color
-                  ),
-                ),
-                child: Text(
-                  DateFormat('yyyy/MM/dd', 'en').format(_membershipExpiration),
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyLarge?.color, // Theme-based text color
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _paymentController,
-              decoration: InputDecoration(
-                labelText: translations['initial_payment'],
-                prefixIcon: Icon(Icons.payments_outlined, color: Theme.of(context).iconTheme.color), // Theme-based icon color
-                suffixText: translations['currency'],
-                filled: true,
-                fillColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[850] // Dark mode fill color
-                    : Colors.grey[200], // Light mode fill color
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Theme.of(context).dividerColor), // Theme-based border color
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.5)), // Lighter border
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2), // Focused border color
-                ),
-                errorStyle: TextStyle(
-                  color: Theme.of(context).colorScheme.error, // Error color based on theme
-                ),
-              ),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value?.isEmpty ?? true) return translations['enter_amount'];
-                if (double.tryParse(value!) == null) {
-                  return translations['enter_valid_amount'];
-                }
-                return null;
-              },
-            ),
-          ],
-        ),
-      ),
     );
   }
 
   Widget _buildTrainerSelection() {
-    return Card(
-      elevation: 2,
-      color: Theme.of(context).cardColor, // Use theme card color
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              translations['select_trainer']!,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.titleLarge?.color, // Theme-based text color
-              ),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            Localization.membershipTranslations['select_trainer']!,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.titleLarge?.color,
             ),
-            const SizedBox(height: 16),
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('clients')
-                  .where('memberType', isEqualTo: MemberType.trainer.toString())
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                }
+          ),
+          const SizedBox(height: 16),
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('trainers')
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
 
-                List<DropdownMenuItem<String>> trainerItems = [];
-                for (var doc in snapshot.data!.docs) {
-                  var data = doc.data() as Map<String, dynamic>;
+              List<DropdownMenuItem<String>> trainerItems = [];
+              for (var doc in snapshot.data!.docs) {
+                var data = doc.data() as Map<String, dynamic>;
+
+                // Check if the trainer can teach any of the selected sports
+                List<dynamic> trainerSportsData = data['sports'] ?? []; // Adjusted to dynamic
+                List<String> trainerSports = trainerSportsData.map((sport) {
+                  // Assuming each sport is a map and you want to get the 'id'
+                  if (sport is Map<String, dynamic>) {
+                    return sport['id'] as String; // Ensure this returns a string ID
+                  }
+                  return ''; // Fallback if not a map
+                }).toList();
+
+                // Check if the trainer can teach any of the selected sports
+                bool canTeach = _selectedSports.any((sport) => trainerSports.contains(sport.id));
+
+                if (canTeach) {
                   trainerItems.add(DropdownMenuItem(
                     value: doc.id,
-                    child: Text('${data['firstName']} ${data['lastName']}',
+                    child: Text(
+                      '${data['firstName']} ${data['lastName']}',
                       style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyLarge?.color, // Theme-based text color
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                   ));
                 }
+              }
 
-                return DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: translations['choose_trainer'],
-                    labelStyle: TextStyle(
-                      color: Theme.of(context).textTheme.bodyLarge?.color, // Theme-based label color
-                    ),
-                    prefixIcon: Icon(Icons.fitness_center, color: Theme.of(context).iconTheme.color), // Theme-based icon color
-                    filled: true,
-                    fillColor: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.grey[850] // Dark mode fill color
-                        : Colors.grey[200], // Light mode fill color
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Theme.of(context).dividerColor), // Theme-based border color
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.5)), // Lighter border
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2), // Focused border color
-                    ),
-                    errorStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.error, // Error color based on theme
-                    ),
+              return DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: Localization.membershipTranslations['choose_trainer'],
+                  labelStyle: TextStyle(
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
-                  value: _selectedTrainerId,
-                  items: trainerItems,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedTrainerId = newValue;
-                    });
-                  },
-                  validator: (value) =>
-                  value == null ? translations['choose_trainer'] : null,
-                );
-              },
-            ),
-          ],
-        ),
+                  prefixIcon: Icon(Icons.fitness_center, color: Theme.of(context).iconTheme.color),
+                  filled: true,
+                  fillColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[850]
+                      : Colors.grey[200],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.5)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+                  ),
+                  errorStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+                value: _selectedTrainerId,
+                items: trainerItems.isNotEmpty ? trainerItems : null,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedTrainerId = newValue;
+                  });
+                },
+                validator: (value) =>
+                value == null ? Localization.membershipTranslations['choose_trainer'] : null,
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSportsSelection() {
-    return Card(
-      elevation: 2,
-      color: Theme.of(context).cardColor, // Use theme card color
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _selectedMemberType == MemberType.trainer
-                  ? translations['sports_to_teach']!
-                  : translations['sports_to_join']!,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.titleLarge?.color, // Theme-based text color
-              ),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _selectedMemberType == MemberType.trainer
+                ? Localization.membershipTranslations['sports_to_teach']!
+                : Localization.membershipTranslations['sports_to_join']!,
+            style: TextStyle(
+              fontSize: 20, // Slightly larger for emphasis
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.titleLarge?.color, // Using primary color for gym theme
             ),
-            const SizedBox(height: 16),
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('sports').snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                }
+          ),
+          const SizedBox(height: 16),
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance.collection('sports').snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
 
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: snapshot.data!.docs.map((doc) {
-                        var sport = Sport.fromMap(doc.data() as Map<String, dynamic>);
-                        bool isSelected = _selectedSports.any((s) => s.id == sport.id);
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  return Wrap(
+                    spacing: 10, // Increased spacing for better readability
+                    runSpacing: 10,
+                    children: snapshot.data!.docs.map((doc) {
+                      var sport = Sport.fromMap(doc.data() as Map<String, dynamic>);
+                      bool isSelected = _selectedSports.any((s) => s.id == sport.id);
 
-                        return ChoiceChip(
-                          label: Text(
-                            sport.name,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color,
-                            ),
-                          ),
-                          selected: isSelected,
-                          onSelected: (bool selected) {
-                            setState(() {
-                              if (selected) {
-                                _selectedSports.add(sport);
-                              } else {
-                                _selectedSports.removeWhere((s) => s.id == sport.id);
-                              }
-                            });
-                          },
-                          backgroundColor: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey[800] // Dark mode background color for chips
-                              : Colors.grey.shade50, // Light mode background color for chips
-                          selectedColor: secondaryColor,
-                          labelStyle: TextStyle(
+                      return ChoiceChip(
+                        label: Text(
+                          sport.name,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color, // Text color based on selection
                             fontWeight: FontWeight.bold,
                           ),
-                        );
-                      }).toList(),
-                    );
-                  },
-                );
-              },
-            ),
-            if (_selectedSports.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  translations['select_sport']!,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error, // Use theme error color
-                    fontSize: 12,
-                  ),
+                        ),
+                        selected: isSelected,
+                        onSelected: (bool selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedSports.add(sport);
+                            } else {
+                              _selectedSports.removeWhere((s) => s.id == sport.id);
+                            }
+                          });
+                        },
+                        backgroundColor: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[800] // Dark mode background color for unselected chips
+                            : Colors.grey[200], // Light mode background color for unselected chips
+                        selectedColor: Theme.of(context).colorScheme.primary, // Primary color for selection
+                        elevation: 4, // Add elevation for shadow effect
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12), // Rounded corners
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
+              );
+            },
+          ),
+          if (_selectedSports.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                Localization.membershipTranslations['select_sport']!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error, // Use theme error color
+                  fontSize: 14, // Slightly larger for better visibility
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
 
   Widget _buildNotes() {
-    return Card(
-      elevation: 2,
-      color: Theme.of(context).cardColor, // Use theme card color
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              translations['additional_notes']!,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.titleLarge?.color, // Theme-based text color
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            Localization.membershipTranslations['additional_notes']!,
+            style: TextStyle(
+              fontSize: 20, // Slightly larger for better emphasis
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.titleLarge?.color,  // Using primary color for theme
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _notesController,
+            decoration: InputDecoration(
+              labelText: Localization.membershipTranslations['notes'],
+              labelStyle: TextStyle(
+                color: Theme.of(context).colorScheme.onBackground, // Using theme's secondary color for label
+              ),
+              prefixIcon: Icon(Icons.note_outlined, color: Theme.of(context).iconTheme.color), // Theme-based icon color
+              hintText: Localization.membershipTranslations['add_notes'],
+              hintStyle: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), // Faded hint text
+              ),
+              filled: true,
+              fillColor: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[850] // Dark mode fill color
+                  : Colors.grey[200], // Light mode fill color
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12), // Rounded corners
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), // Subtle border color
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary, // Primary color on focus
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), // Subtle border color
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _notesController,
-              decoration: InputDecoration(
-                labelText: translations['notes'],
-                prefixIcon: Icon(Icons.note_outlined, color: Theme.of(context).iconTheme.color), // Theme-based icon color
-                hintText: translations['add_notes'],
-                filled: true,
-                fillColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[850] // Dark mode fill color
-                    : Colors.grey[200], // Light mode fill color
-              ),
-              maxLines: 3,
-              textAlign: TextAlign.right,
+            maxLines: 3,
+            textAlign: TextAlign.start, // Align text to start for better readability
+            style: TextStyle(
+              fontFamily: 'Cairo', // Use Cairo font family
+              fontSize: 16, // Consistent font size for text input
+              color: Theme.of(context).textTheme.bodyLarge?.color, // Text color from theme
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-
   Widget _buildSubmitButton() {
     return FilledButton.icon(
-      onPressed: _submitForm,
+      onPressed: _isLoading ? null : _submitForm, // Disable button when loading
       style: FilledButton.styleFrom(
-        backgroundColor: primaryColor,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-      icon: const Icon(Icons.add, color: Colors.white),
-      label: Text(
-        translations['add_client_button']!,
-        style: const TextStyle(
+      icon: _isLoading
+          ? CircularProgressIndicator(
+        color: Colors.white,
+        strokeWidth: 2,
+      )
+          : const Icon(Icons.add, color: Colors.white),
+      label: _isLoading
+          ? SizedBox(
+        width: 16, // Adjust width to center spinner
+        height: 16, // Adjust height to center spinner
+        child: CircularProgressIndicator(
+          color: Colors.white,
+          strokeWidth: 2,
+        ),
+      )
+          : Text(
+        Localization.membershipTranslations['add_client_button']!,
+        style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
           color: Colors.white,
+          fontFamily: 'Cairo', // Use Cairo font family
         ),
       ),
     );
@@ -690,7 +600,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(translations['fill_required']!),
+          content: Text(Localization.membershipTranslations['fill_required']!),
           backgroundColor: Colors.red,
         ),
       );
@@ -700,7 +610,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
     if (_selectedSports.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(translations['select_sport']!),
+          content: Text(Localization.membershipTranslations['select_sport']!),
           backgroundColor: Colors.red,
         ),
       );
@@ -710,29 +620,30 @@ class _AddClientScreenState extends State<AddClientScreen> {
     setState(() => _isLoading = true);
 
     try {
+      double totalPaid = await _calculateTotalPaid(_selectedSports);
       final client = Client(
-        id: '', // Will be set by Firestore
+        id: '',
         firstName: _firstNameController.text,
         lastName: _lastNameController.text,
         email: _emailController.text,
         phoneNumber: _phoneController.text,
         createdAt: DateTime.now(),
         membershipExpiration: _membershipExpiration,
-        memberType: _selectedMemberType,
-        totalPaid: double.parse(_paymentController.text),
-        paymentDates: [DateTime.now()],
-        nextPaymentDate: DateTime.now().add(const Duration(days: 30)),
+        totalPaid: totalPaid,
+        paymentDates: [],
         sports: _selectedSports,
-        assignedTrainerId:
-        _selectedMemberType == MemberType.personal ? _selectedTrainerId : null,
+        assignedTrainerId: _selectedMemberType == MemberType.personal ? _selectedTrainerId : null,
         clientIds: _selectedMemberType == MemberType.trainer ? [] : null,
         notes: _notesController.text,
       );
 
-      // Add to Firestore
-      await FirebaseFirestore.instance
-          .collection('clients')
-          .add(client.toMap());
+      if (_selectedMemberType == MemberType.trainer) {
+        await FirebaseFirestore.instance.collection('trainers').add(client.toMap());
+      } else {
+        DocumentReference clientDocRef = await FirebaseFirestore.instance.collection('clients').add(client.toMap());
+        String newClientId = clientDocRef.id;
+        await _addClientToTrainer(newClientId, _selectedTrainerId!);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -741,7 +652,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 8),
-                Text(translations['success']!),
+                Text(Localization.membershipTranslations['success']!),
               ],
             ),
             backgroundColor: Colors.green,
@@ -757,7 +668,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
               children: [
                 const Icon(Icons.error, color: Colors.white),
                 const SizedBox(width: 8),
-                Text('${translations['error']}: $e'),
+                Text('${Localization.membershipTranslations['error']}: ${e.toString()}'),
               ],
             ),
             backgroundColor: Colors.red,
@@ -765,8 +676,28 @@ class _AddClientScreenState extends State<AddClientScreen> {
         );
       }
     } finally {
-      setState(() => _isLoading = false);
+      setState(() => _isLoading = false); // Ensure loading state resets
     }
+  }
+
+  // Function to calculate the total paid based on selected sports
+  Future<double> _calculateTotalPaid(List<Sport> selectedSports) async {
+    double total = 0.0;
+
+    // Assuming you have a way to get the price for each sport
+    for (var sport in selectedSports) {
+      total += sport.price; // Directly summing up the prices
+    }
+
+    return total;
+  }
+
+  // Function to add the client ID to the trainer's client list
+  Future<void> _addClientToTrainer(String clientId, String trainerId) async {
+    // Update the trainer's document with the new client ID
+    await FirebaseFirestore.instance.collection('trainers').doc(trainerId).update({
+      'clientIds': FieldValue.arrayUnion([clientId]), // Add client ID to the list
+    });
   }
 
   @override
@@ -776,97 +707,6 @@ class _AddClientScreenState extends State<AddClientScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _notesController.dispose();
-    _paymentController.dispose();
     super.dispose();
-  }
-}
-
-// Add these enums and models if you don't have them already
-
-enum MemberType {
-  personal,
-  trainer,
-}
-
-class Sport {
-  final String id;
-  final String name;
-  final double price;
-
-  Sport({
-    required this.id,
-    required this.name,
-    required this.price,
-  });
-
-  factory Sport.fromMap(Map<String, dynamic> map) {
-    return Sport(
-      id: map['id'] ?? '',
-      name: map['name'] ?? '',
-      price: (map['price'] ?? 0).toDouble(),
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'price': price,
-    };
-  }
-}
-
-class Client {
-  final String id;
-  final String firstName;
-  final String lastName;
-  final String email;
-  final String phoneNumber;
-  final DateTime createdAt;
-  final DateTime membershipExpiration;
-  final MemberType memberType;
-  final double totalPaid;
-  final List<DateTime> paymentDates;
-  final DateTime nextPaymentDate;
-  final List<Sport> sports;
-  final String? assignedTrainerId;
-  final List<String>? clientIds;
-  final String notes;
-
-  Client({
-    required this.id,
-    required this.firstName,
-    required this.lastName,
-    required this.email,
-    required this.phoneNumber,
-    required this.createdAt,
-    required this.membershipExpiration,
-    required this.memberType,
-    required this.totalPaid,
-    required this.paymentDates,
-    required this.nextPaymentDate,
-    required this.sports,
-    this.assignedTrainerId,
-    this.clientIds,
-    required this.notes,
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'firstName': firstName,
-      'lastName': lastName,
-      'email': email,
-      'phoneNumber': phoneNumber,
-      'createdAt': createdAt.toIso8601String(),
-      'membershipExpiration': membershipExpiration.toIso8601String(),
-      'memberType': memberType.toString(),
-      'totalPaid': totalPaid,
-      'paymentDates': paymentDates.map((date) => date.toIso8601String()).toList(),
-      'nextPaymentDate': nextPaymentDate.toIso8601String(),
-      'sports': sports.map((sport) => sport.toMap()).toList(),
-      'assignedTrainerId': assignedTrainerId,
-      'clientIds': clientIds,
-      'notes': notes,
-    };
   }
 }
