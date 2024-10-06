@@ -85,6 +85,22 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           )
               : null,
+          // Add an IconButton for the "Add Client" action
+          actions: _selectedIndex == 0
+              ? [
+            IconButton(
+              icon: const Icon(Icons.add), // Plus icon to indicate adding a new client
+              tooltip: 'Add Client',
+              onPressed: () {
+                // Action to navigate to Add Client Screen or open a dialog
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AddClientScreen()),
+                );
+              },
+            ),
+          ]
+              : [],
         ),
         drawer: _selectedIndex == 0
             ? Sidebar(

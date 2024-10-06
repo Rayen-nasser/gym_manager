@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:gym_energy/screens/client/add_edit_client_screen.dart';
 import 'package:gym_energy/model/client.dart' as client_model;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gym_energy/widgets/phone_cart_client_widget.dart';
-import '../../localization.dart';
-import '../../widgets/side_bar.dart';
 import '../../widgets/tablet_client_cart_widget.dart';
-import 'package:gym_energy/model/sport.dart';
 
 class ClientsScreen extends StatefulWidget {
   final String selectedFilter;
@@ -26,19 +22,10 @@ class ClientsScreen extends StatefulWidget {
 
 class _ClientsScreenState extends State<ClientsScreen> {
   String _searchQuery = '';
-  List<Sport> _sports = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchSports();
-  }
-
-  Future<void> _fetchSports() async {
-    final sportSnapshot = await FirebaseFirestore.instance.collection('sports').get();
-    setState(() {
-      _sports = sportSnapshot.docs.map((doc) => Sport.fromMap(doc.data() as Map<String, dynamic>)).toList();
-    });
   }
 
   @override
@@ -59,18 +46,17 @@ class _ClientsScreenState extends State<ClientsScreen> {
               } else if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(child: Text("No clients or trainers found"));
+                return const Center(child: Text("لم يتم العثور على عملاء أو مدربين"));
               }
 
               final clients = _filterClients(snapshot.data!);
 
               return GridView.builder(
-                padding: const EdgeInsets.all(16),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: isTablet ? (isTabletVertical ? 2 : 4) : 1,
                   childAspectRatio: isTablet ? (isTabletVertical ? 1.6 : 1.3) : 4,
                   crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
+                  mainAxisSpacing: 6,
                 ),
                 itemCount: clients.length,
                 itemBuilder: (context, index) {
@@ -88,14 +74,15 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: TextField(
         onChanged: (value) => setState(() => _searchQuery = value),
         textDirection: TextDirection.rtl, // Set text direction to right-to-left
         decoration: InputDecoration(
-          hintText: 'بحث عن اسم', // Arabic text for "Search by name"
+          hintText: 'بحث عن اسم أو اللقب', // Arabic text for "Search by name"
           hintStyle: TextStyle(
-            fontFamily: 'Cairo', // Ensure the Cairo font is applied
+            fontFamily: 'Cairo', // Apply Cairo font
+            color: Theme.of(context).primaryColor, // Use the primary color for hint text
           ),
           prefixIcon: const Icon(Icons.search),
           border: OutlineInputBorder(
@@ -103,7 +90,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ),
         ),
         style: TextStyle(
-          fontFamily: 'Cairo', // Apply the Cairo font for the input text
+          fontFamily: 'Cairo',
+          color: Theme.of(context).colorScheme.primary
         ),
       ),
     );
@@ -135,12 +123,5 @@ class _ClientsScreenState extends State<ClientsScreen> {
     final allDocs = [...clientSnapshot.docs, ...trainerSnapshot.docs];
 
     return allDocs.map((doc) => client_model.Client.fromMap(doc.data() as Map<String, dynamic>, doc.id)).toList();
-  }
-
-  void _navigateToAddClientScreen(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AddClientScreen()),
-    );
   }
 }

@@ -36,17 +36,18 @@ class TabletClientCartWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildNameRow(context),
+              Flexible(child: buildNameRow(context)),
               const SizedBox(height: 10),
-              buildTotalPaid(context),
+              Flexible(child: buildTotalPaid(context)),
               const SizedBox(height: 10),
-              buildMembershipInfo(context, isMembershipExpired),
+              Flexible(child: buildMembershipInfo(context, isMembershipExpired)),
             ],
           ),
         ),
       ),
     );
   }
+
 
   Widget buildNameRow(BuildContext context) {
     return Row(

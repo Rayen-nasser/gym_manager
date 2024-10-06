@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/sport.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../screens/client/add_edit_client_screen.dart';
+
 class Sidebar extends StatefulWidget {
   final String selectedFilter;
   final String? selectedSport;
@@ -254,6 +256,13 @@ class _SidebarState extends State<Sidebar> {
           ),
         ),
       ],
+    );
+  }
+
+  void _navigateToAddClientScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddClientScreen()),
     );
   }
 }
