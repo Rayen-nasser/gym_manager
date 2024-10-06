@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../model/member.dart';
-import '../screens/client/client_detail_screen.dart';
+import '../screens/members/member_detail_screen.dart';
 
 class TabletClientCartWidget extends StatelessWidget {
   final Member client;
@@ -15,12 +15,12 @@ class TabletClientCartWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     bool isMembershipExpired =
-        client.membershipExpiration.isBefore(DateTime.now());
+    client.membershipExpiration.isBefore(DateTime.now());
 
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+      margin: const EdgeInsets.symmetric(vertical: 4,),
       child: InkWell(
         onTap: () {
           // Navigate to the client detail screen on tap
@@ -42,18 +42,19 @@ class TabletClientCartWidget extends StatelessWidget {
               ],
             ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Flexible(child: buildNameRow(context)),
-                const SizedBox(height: 10),
-                Flexible(child: buildTotalPaid(context)),
-                const SizedBox(height: 10),
-                Flexible(
-                    child: buildMembershipInfo(context, isMembershipExpired)),
-              ],
+          child: SingleChildScrollView(  // Wrap with SingleChildScrollView
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  buildNameRow(context),
+                  const SizedBox(height: 10),
+                  buildTotalPaid(context),
+                  const SizedBox(height: 10),
+                  buildMembershipInfo(context, isMembershipExpired),
+                ],
+              ),
             ),
           ),
         ),
@@ -123,9 +124,9 @@ class TabletClientCartWidget extends StatelessWidget {
 
   Widget buildMembershipInfo(BuildContext context, bool isExpired) {
     final expirationDate =
-        DateFormat('yyyy-MM-dd').format(client.membershipExpiration);
+    DateFormat('yyyy-MM-dd').format(client.membershipExpiration);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: isExpired
             ? Colors.red.withOpacity(0.1)
@@ -139,9 +140,9 @@ class TabletClientCartWidget extends StatelessWidget {
                 ? Icons.warning_amber_rounded
                 : Icons.check_circle_outline,
             color: isExpired ? Colors.red : Colors.green,
-            size: 20,
+            size: 18,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
