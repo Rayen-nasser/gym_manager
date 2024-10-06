@@ -49,6 +49,9 @@ class Member {
   bool get isExpirationActive => membershipExpiration.isAfter(DateTime.now());
 
   factory Member.fromMap(Map<String, dynamic> data, String documentId) {
+    final memberType = data['memberType'] ?? 'unknown';
+    print('Creating Member: ID=$documentId, Type=$memberType');
+
     return Member(
       id: documentId,
       firstName: data['firstName'] ?? '',
@@ -67,8 +70,8 @@ class Member {
       assignedTrainerId: data['assignedTrainerId'],
       clientIds: (data['clientIds'] as List<dynamic>?)?.cast<String>(),
       notes: data['notes'],
-      memberType: data['memberType'] ?? 'personal', // Default to 'personal'
-      isActive: data['isSubscriber'] ?? false, // Default to false
+      memberType: memberType,
+      isActive: data['isActive'] ?? false,
     );
   }
 

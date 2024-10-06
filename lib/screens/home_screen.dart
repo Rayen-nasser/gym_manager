@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:gym_energy/screens/client/add_edit_client_screen.dart';
-import 'package:gym_energy/screens/client/list_clients_screen.dart';
+import 'package:gym_energy/screens/members/add_edit_member_screen.dart';
+import 'package:gym_energy/screens/members/list_members_screen.dart';
 import '../widgets/side_bar.dart';
 import '../localization.dart';
 
