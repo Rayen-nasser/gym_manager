@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:gym_energy/screens/dashboard/home_screen.dart';
+import 'package:gym_energy/screens/home_screen.dart';
 import 'package:gym_energy/themes/gym_themes.dart';  // Updated import path
 import 'package:shared_preferences/shared_preferences.dart';
 
