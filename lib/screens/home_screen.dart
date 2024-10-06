@@ -20,24 +20,32 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  String _selectedFilter = 'All';
+  String? _selectedSport;
+  bool _showExpiredOnly = false;
 
-  final List<Widget> _screens = [
-    const ClientsScreen(),
-    _buildCenteredText("شاشة لوحة التحكم"),
-    _buildCenteredText("شاشة التحصيل"),
-    _buildCenteredText("شاشة صالة الألعاب الرياضية"),
-    _buildCenteredText("تقرير اليوم"),
-  ];
+  Widget _getScreen(int index) {
+    switch (index) {
+      case 0:
+        return ClientsScreen(
+          selectedFilter: _selectedFilter,
+          selectedSport: _selectedSport,
+          showExpiredOnly: _showExpiredOnly,
+        );
+      case 1:
+        return _buildCenteredText("شاشة لوحة التحكم");
+      case 2:
+        return _buildCenteredText("شاشة التحصيل");
+      case 3:
+        return _buildCenteredText("شاشة صالة الألعاب الرياضية");
+      case 4:
+        return _buildCenteredText("تقرير اليوم");
+      default:
+        return _buildCenteredText("الشاشة غير موجودة");
+    }
+  }
 
-  final List<String> _titles = [
-    'الأعضاء',
-    'لوحة التحكم',
-    'التحصيل',
-    'جيم',
-    'تقرير اليوم',
-  ];
-
-  static Widget _buildCenteredText(String text) {
+  Widget _buildCenteredText(String text) {
     return Center(
       child: Text(
         text,
@@ -62,74 +70,93 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isTablet = screenWidth > 600;
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _titles[_selectedIndex],
-          style: theme.appBarTheme.titleTextStyle,
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              widget.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-              color: theme.appBarTheme.iconTheme?.color,
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            _selectedIndex == 0 ? 'العملاء' : 'Gym Energy',
+            style: const TextStyle(fontFamily: 'Cairo'),
+          ),
+          leading: _selectedIndex == 0
+              ? Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () => Scaffold.of(context).openDrawer(),
             ),
-            onPressed: widget.onThemeChanged,
-          ),
-        ],
-        toolbarHeight: isTablet ? 80 : 56,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          double paddingFactor = isTablet ? 0.1 : 0.05;
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: constraints.maxWidth * paddingFactor),
-            child: _screens[_selectedIndex],
-          );
-        },
-      ),
-      drawer: Sidebar(
-        onItemTapped: _onItemTapped,
-        selectedIndex: _selectedIndex,
-        title: 'قائمة التنقل', // Title for the sidebar
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: theme.primaryColor,
-        selectedItemColor: theme.colorScheme.secondary,
-        unselectedItemColor: Colors.white,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        iconSize: isTablet ? 36 : 24,
-        selectedLabelStyle: const TextStyle(
-          fontFamily: 'Cairo',
-          fontWeight: FontWeight.w700,
+          )
+              : null,
         ),
-        unselectedLabelStyle: const TextStyle(
-          fontFamily: 'Cairo',
+        drawer: _selectedIndex == 0
+            ? Sidebar(
+          selectedFilter: _selectedFilter,
+          selectedSport: _selectedSport,
+          showExpiredOnly: _showExpiredOnly,
+          onFilterChanged: (filter) {
+            setState(() {
+              _selectedFilter = filter;
+            });
+          },
+          onSportChanged: (sport) {
+            setState(() {
+              _selectedSport = sport;
+            });
+          },
+          onExpiredChanged: (value) {
+            setState(() {
+              _showExpiredOnly = value;
+            });
+          },
+        )
+            : null,
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            double paddingFactor = isTablet ? 0.1 : 0.05;
+            return Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: constraints.maxWidth * paddingFactor,
+              ),
+              child: _getScreen(_selectedIndex),
+            );
+          },
         ),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'الأعضاء',
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: theme.primaryColor,
+          selectedItemColor: theme.colorScheme.secondary,
+          unselectedItemColor: Colors.white,
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          iconSize: isTablet ? 36 : 24,
+          selectedLabelStyle: const TextStyle(
+            fontFamily: 'Cairo',
+            fontWeight: FontWeight.w700,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.analytics),
-            label: 'لوحة التحكم',
+          unselectedLabelStyle: const TextStyle(
+            fontFamily: 'Cairo',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet),
-            label: 'التحصيل',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.fitness_center),
-            label: 'جيم',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt),
-            label: 'تقرير اليوم',
-          ),
-        ],
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people),
+              label: 'الأعضاء',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.analytics),
+              label: 'لوحة التحكم',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_balance_wallet),
+              label: 'التحصيل',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.fitness_center),
+              label: 'جيم',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.receipt),
+              label: 'تقرير اليوم',
+            ),
+          ],
+        ),
       ),
     );
   }
