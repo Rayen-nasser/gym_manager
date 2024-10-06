@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:gym_energy/screens/client/add_edit_client_screen.dart';
 import 'package:gym_energy/screens/client/list_clients_screen.dart';
-import '../../localization.dart';
+import '../widgets/side_bar.dart';
+import '../localization.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function() onThemeChanged;
   final bool isDarkMode;
 
   const HomeScreen({
-    super.key,
+    Key? key,
     required this.onThemeChanged,
     required this.isDarkMode,
-  });
+  }) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -26,6 +27,14 @@ class _HomeScreenState extends State<HomeScreen> {
     _buildCenteredText("شاشة التحصيل"),
     _buildCenteredText("شاشة صالة الألعاب الرياضية"),
     _buildCenteredText("تقرير اليوم"),
+  ];
+
+  final List<String> _titles = [
+    'الأعضاء',
+    'لوحة التحكم',
+    'التحصيل',
+    'جيم',
+    'تقرير اليوم',
   ];
 
   static Widget _buildCenteredText(String text) {
@@ -56,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          Localization.appName,
+          _titles[_selectedIndex],
           style: theme.appBarTheme.titleTextStyle,
         ),
         actions: [
@@ -72,12 +81,17 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          double paddingFactor = isTablet ? 0.1 : 0.05; // Adjusted padding
+          double paddingFactor = isTablet ? 0.1 : 0.05;
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: constraints.maxWidth * paddingFactor),
             child: _screens[_selectedIndex],
           );
         },
+      ),
+      drawer: Sidebar(
+        onItemTapped: _onItemTapped,
+        selectedIndex: _selectedIndex,
+        title: 'قائمة التنقل', // Title for the sidebar
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
