@@ -23,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _selectedFilter = 'All';
   String? _selectedSport;
   bool _showExpiredOnly = false;
+  bool _showActiveMembers = true;
 
   Widget _getScreen(int index) {
     switch (index) {
@@ -31,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
           selectedFilter: _selectedFilter,
           selectedSport: _selectedSport,
           showExpiredOnly: _showExpiredOnly,
+          showActiveMembers: _showActiveMembers,
         );
       case 1:
         return _buildCenteredText("شاشة لوحة التحكم");
@@ -115,6 +117,11 @@ class _HomeScreenState extends State<HomeScreen> {
           onSportChanged: (sport) {
             setState(() {
               _selectedSport = sport;
+            });
+          },
+          onActiveMembersChanged: (value) {
+            setState(() {
+              _showActiveMembers = value; // Update active/inactive state
             });
           },
           onExpiredChanged: (value) {

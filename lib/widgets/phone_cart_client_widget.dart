@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../model/client.dart';
+import '../model/member.dart';
+import '../screens/client/client_detail_screen.dart';
 
 class PhoneCartClientWidget extends StatelessWidget {
-  final Client client;
+  final Member client;
 
   const PhoneCartClientWidget({
     Key? key,
@@ -23,7 +24,11 @@ class PhoneCartClientWidget extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          // Handle tap event if needed
+          // Navigate to the client detail screen on tap
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ClientDetailScreen(client: client)),
+          );
         },
         child: Padding(
           padding: const EdgeInsets.all(12),

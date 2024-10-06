@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../model/client.dart';
+import '../model/member.dart';
+import '../screens/client/client_detail_screen.dart';
 
 class TabletClientCartWidget extends StatelessWidget {
-  final Client client;
+  final Member client;
 
   const TabletClientCartWidget({
     Key? key,
@@ -13,41 +14,52 @@ class TabletClientCartWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isMembershipExpired = client.membershipExpiration.isBefore(DateTime.now());
+    bool isMembershipExpired =
+        client.membershipExpiration.isBefore(DateTime.now());
 
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(15),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).primaryColor.withOpacity(0.1),
-              Theme.of(context).primaryColor.withOpacity(0.05),
-            ],
+      child: InkWell(
+        onTap: () {
+          // Navigate to the client detail screen on tap
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => ClientDetailScreen(client: client)),
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Theme.of(context).primaryColor.withOpacity(0.1),
+                Theme.of(context).primaryColor.withOpacity(0.05),
+              ],
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Flexible(child: buildNameRow(context)),
-              const SizedBox(height: 10),
-              Flexible(child: buildTotalPaid(context)),
-              const SizedBox(height: 10),
-              Flexible(child: buildMembershipInfo(context, isMembershipExpired)),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Flexible(child: buildNameRow(context)),
+                const SizedBox(height: 10),
+                Flexible(child: buildTotalPaid(context)),
+                const SizedBox(height: 10),
+                Flexible(
+                    child: buildMembershipInfo(context, isMembershipExpired)),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-
 
   Widget buildNameRow(BuildContext context) {
     return Row(
@@ -110,17 +122,22 @@ class TabletClientCartWidget extends StatelessWidget {
   }
 
   Widget buildMembershipInfo(BuildContext context, bool isExpired) {
-    final expirationDate = DateFormat('yyyy-MM-dd').format(client.membershipExpiration);
+    final expirationDate =
+        DateFormat('yyyy-MM-dd').format(client.membershipExpiration);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isExpired ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+        color: isExpired
+            ? Colors.red.withOpacity(0.1)
+            : Colors.green.withOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
           Icon(
-            isExpired ? Icons.warning_amber_rounded : Icons.check_circle_outline,
+            isExpired
+                ? Icons.warning_amber_rounded
+                : Icons.check_circle_outline,
             color: isExpired ? Colors.red : Colors.green,
             size: 20,
           ),

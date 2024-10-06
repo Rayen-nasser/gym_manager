@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:gym_energy/model/client.dart' as client_model;
+import 'package:gym_energy/model/member.dart' as client_model;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gym_energy/widgets/phone_cart_client_widget.dart';
+import 'client_detail_screen.dart';
 import '../../widgets/tablet_client_cart_widget.dart';
+
 
 class ClientsScreen extends StatefulWidget {
   final String selectedFilter;
   final String? selectedSport;
   final bool showExpiredOnly;
+  final bool showActiveMembers;
 
   const ClientsScreen({
     Key? key,
     required this.selectedFilter,
     required this.selectedSport,
     required this.showExpiredOnly,
+    this.showActiveMembers = true,
   }) : super(key: key);
 
   @override
@@ -38,7 +42,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
       children: [
         _buildSearchBar(),
         Expanded(
-          child: FutureBuilder<List<client_model.Client>>(
+          child: FutureBuilder<List<client_model.Member>>(
             future: _fetchClients(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -60,11 +64,26 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 ),
                 itemCount: clients.length,
                 itemBuilder: (context, index) {
-                  return isTablet
-                      ? TabletClientCartWidget(client: clients[index])
-                      : PhoneCartClientWidget(client: clients[index]);
+                  final client = clients[index]; // Get the client object
+
+                  return GestureDetector(
+                    onTap: () {
+                      print('Card tapped: ${client.firstName}'); // Debugging line
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ClientDetailScreen(client: client),
+                        ),
+                      );
+                    },
+                    child: isTablet
+                        ? TabletClientCartWidget(client: client) // Your actual widget
+                        : PhoneCartClientWidget(client: client), // Your actual widget
+                  );
                 },
+
               );
+
             },
           ),
         ),
@@ -97,11 +116,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
     );
   }
 
-  List<client_model.Client> _filterClients(List<client_model.Client> clients) {
+  List<client_model.Member> _filterClients(List<client_model.Member> clients) {
     return clients.where((client) {
       final matchesFilter = widget.selectedFilter == 'All' ||
-          (widget.selectedFilter == 'Clients' && client.clientIds == null) ||
-          (widget.selectedFilter == 'Trainers' && client.clientIds != null);
+          (widget.selectedFilter == 'Clients' && client.memberType == "trainee") ||
+          (widget.selectedFilter == 'Trainers' && client.memberType == "trainer");
 
       final matchesSport = widget.selectedSport == null ||
           client.sports.any((sport) => sport.name == widget.selectedSport);
@@ -110,18 +129,21 @@ class _ClientsScreenState extends State<ClientsScreen> {
           client.firstName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           client.lastName.toLowerCase().contains(_searchQuery.toLowerCase());
 
-      final matchesExpiration = !widget.showExpiredOnly || !client.isActive;
+      final matchesExpiration = !widget.showExpiredOnly || !client.isExpirationActive;
+
+      // Add filtering for active and inactive members
+      final matchesActiveStatus = widget.showActiveMembers ? client.isActive : !client.isActive;
 
       return matchesFilter && matchesSport && matchesSearch && matchesExpiration;
     }).toList();
   }
 
-  Future<List<client_model.Client>> _fetchClients() async {
+  Future<List<client_model.Member>> _fetchClients() async {
     final clientSnapshot = await FirebaseFirestore.instance.collection('clients').get();
     final trainerSnapshot = await FirebaseFirestore.instance.collection('trainers').get();
 
     final allDocs = [...clientSnapshot.docs, ...trainerSnapshot.docs];
 
-    return allDocs.map((doc) => client_model.Client.fromMap(doc.data() as Map<String, dynamic>, doc.id)).toList();
+    return allDocs.map((doc) => client_model.Member.fromMap(doc.data() as Map<String, dynamic>, doc.id)).toList();
   }
 }

@@ -1,12 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gym_energy/model/sport.dart';
 
-enum MemberType {
-  personal, // Regular gym member
-  trainer   // Gym trainer
-}
-
-class Client {
+class Member {
   final String id;
   final String firstName;
   final String lastName;
@@ -27,7 +22,11 @@ class Client {
   // Additional information
   final String? notes;
 
-  Client({
+  // New properties
+  final String memberType; // Changed to String
+  final bool isActive; // Subscription status (on or off)
+
+  Member({
     required this.id,
     required this.firstName,
     required this.lastName,
@@ -41,14 +40,16 @@ class Client {
     this.assignedTrainerId,
     this.clientIds,
     this.notes,
+    required this.memberType, // New parameter
+    this.isActive = true, // New parameter
   });
 
   String get fullName => '$firstName $lastName';
 
-  bool get isActive => membershipExpiration.isAfter(DateTime.now());
+  bool get isExpirationActive => membershipExpiration.isAfter(DateTime.now());
 
-  factory Client.fromMap(Map<String, dynamic> data, String documentId) {
-    return Client(
+  factory Member.fromMap(Map<String, dynamic> data, String documentId) {
+    return Member(
       id: documentId,
       firstName: data['firstName'] ?? '',
       lastName: data['lastName'] ?? '',
@@ -66,6 +67,8 @@ class Client {
       assignedTrainerId: data['assignedTrainerId'],
       clientIds: (data['clientIds'] as List<dynamic>?)?.cast<String>(),
       notes: data['notes'],
+      memberType: data['memberType'] ?? 'personal', // Default to 'personal'
+      isActive: data['isSubscriber'] ?? false, // Default to false
     );
   }
 
@@ -83,13 +86,15 @@ class Client {
       'assignedTrainerId': assignedTrainerId,
       'clientIds': clientIds,
       'notes': notes,
+      'memberType': memberType, // Save as String
+      'isSubscriber': isActive, // Save subscription status
     };
   }
 
   // Add a payment
-  Client addPayment(double amount, DateTime paymentDate) {
+  Member addPayment(double amount, DateTime paymentDate) {
     List<DateTime> updatedPaymentDates = List.from(paymentDates)..add(paymentDate);
-    return Client(
+    return Member(
       id: id,
       firstName: firstName,
       lastName: lastName,
@@ -103,12 +108,14 @@ class Client {
       assignedTrainerId: assignedTrainerId,
       clientIds: clientIds,
       notes: notes,
+      memberType: memberType,
+      isActive: isActive,
     );
   }
 
-  Client updateMembershipExpiration(DateTime newExpirationDate) {
+  Member updateMembershipExpiration(DateTime newExpirationDate) {
     List<DateTime> updatedPaymentDates = List.from(paymentDates)..add(newExpirationDate);
-    return Client(
+    return Member(
       id: id,
       firstName: firstName,
       lastName: lastName,
@@ -122,13 +129,15 @@ class Client {
       assignedTrainerId: assignedTrainerId,
       clientIds: clientIds,
       notes: notes,
+      memberType: memberType,
+      isActive: isActive,
     );
   }
 
   // Add a client (for trainers only)
-  Client? addClient(String clientId) {
+  Member? addClient(String clientId) {
     List<String> updatedClientIds = List.from(clientIds ?? [])..add(clientId);
-    return Client(
+    return Member(
       id: id,
       firstName: firstName,
       lastName: lastName,
@@ -142,6 +151,8 @@ class Client {
       assignedTrainerId: assignedTrainerId,
       clientIds: updatedClientIds,
       notes: notes,
+      memberType: memberType,
+      isActive: isActive,
     );
   }
 
@@ -151,7 +162,7 @@ class Client {
   }
 
   // Add a copyWith method
-  Client copyWith({
+  Member copyWith({
     String? id,
     String? firstName,
     String? lastName,
@@ -165,8 +176,10 @@ class Client {
     String? assignedTrainerId,
     List<String>? clientIds,
     String? notes,
+    String? memberType, // Changed to String
+    bool? isSubscriber, // Updated to match
   }) {
-    return Client(
+    return Member(
       id: id ?? this.id,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
@@ -180,7 +193,8 @@ class Client {
       assignedTrainerId: assignedTrainerId ?? this.assignedTrainerId,
       clientIds: clientIds ?? this.clientIds,
       notes: notes ?? this.notes,
+      memberType: memberType ?? this.memberType, // Update memberType
+      isActive: isSubscriber ?? this.isActive, // Update isSubscriber
     );
   }
-
 }

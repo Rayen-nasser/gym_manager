@@ -5,7 +5,7 @@ import 'package:intl/date_symbol_data_local.dart'; // Import this for date initi
 import 'package:gym_energy/widgets/text_flied.dart';
 
 import '../../localization.dart';
-import '../../model/client.dart';
+import '../../model/member.dart';
 import '../../model/sport.dart';
 
 class AddClientScreen extends StatefulWidget {
@@ -23,7 +23,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
 
-  MemberType _selectedMemberType = MemberType.personal;
+  String _selectedMemberType = "trainee";
   DateTime _membershipExpiration = DateTime.now().add(const Duration(days: 30));
   String? _selectedTrainerId;
   List<Sport> _selectedSports = [];
@@ -125,7 +125,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                   _buildSportsSelection(),
 
                   // Conditional rendering based on member type
-                  if (_selectedMemberType == MemberType.personal) ...[
+                  if (_selectedMemberType == "trainer") ...[
                     const SizedBox(height: 16),
                     _buildTrainerSelection(),
                   ],
@@ -154,7 +154,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
           _buildPersonalInfo(),
           const SizedBox(height: 16),
           _buildSportsSelection(),
-          if (_selectedMemberType == MemberType.personal) ...[
+          if (_selectedMemberType == "trainer") ...[
             const SizedBox(height: 16),
             _buildTrainerSelection(),
           ],
@@ -171,80 +171,67 @@ class _AddClientScreenState extends State<AddClientScreen> {
       children: [
         // Title for the membership type selection
         Text(
-          Localization.membershipTranslations['membership_type'] ??
-              'Membership Type',
+          Localization.membershipTranslations['membership_type'] ?? 'Membership Type',
           style: TextStyle(
             fontFamily: 'Cairo',
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.color, // Theme color for text
+            color: Theme.of(context).textTheme.titleLarge?.color, // Theme color for text
           ),
         ),
-        const SizedBox(
-            height: 12), // Spacing between title and segmented button
+        const SizedBox(height: 12), // Spacing between title and segmented button
         // Segmented button for selecting membership type
-        SegmentedButton<MemberType>(
+        SegmentedButton<String>(
           segments: [
             ButtonSegment(
-              value: MemberType.personal,
+              value: 'trainee', // Use string value
               label: Text(
                 Localization.membershipTranslations['trainee'] ?? 'Trainee',
                 style: TextStyle(
                   fontFamily: 'Cairo', // Using Cairo font
                   fontWeight: FontWeight.w700, // Semi-bold style
                   fontSize: 16, // Adjust font size
-                  color: Theme.of(context)
-                      .textTheme
-                      .bodyLarge
-                      ?.backgroundColor, // Theme-based color
+                  color: Theme.of(context).textTheme.bodyLarge?.backgroundColor, // Theme-based color
                 ),
               ),
               icon: const Icon(Icons.person),
             ),
             ButtonSegment(
-              value: MemberType.trainer,
+              value: 'trainer', // Use string value
               label: Text(
-                Localization.membershipTranslations['trainer'] ?? 'Trainer',
+                Localization.membershipTranslations['trainer'] ?? 'trainer',
                 style: TextStyle(
                   fontFamily: 'Cairo', // Using Cairo font
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
-                  color: Theme.of(context)
-                      .textTheme
-                      .bodyLarge
-                      ?.backgroundColor, // Theme-based color
+                  color: Theme.of(context).textTheme.bodyLarge?.backgroundColor, // Theme-based color
                 ),
               ),
               icon: const Icon(Icons.fitness_center),
             ),
           ],
-          selected: {_selectedMemberType},
-          onSelectionChanged: (Set<MemberType> selection) {
+          selected: {_selectedMemberType}, // Should still hold string value
+          onSelectionChanged: (Set<String> selection) {
             setState(() {
-              _selectedMemberType = selection.first;
-              if (_selectedMemberType == MemberType.trainer) {
-                _selectedTrainerId = null;
+              _selectedMemberType = selection.first; // Update selected member type
+              if (_selectedMemberType == 'trainer') {
+                _selectedTrainerId = null; // Reset trainer ID if selected trainer
               }
             });
           },
           style: ButtonStyle(
             // Button background color based on the selected state
             backgroundColor: MaterialStateProperty.resolveWith<Color>(
-              (Set<MaterialState> states) {
+                  (Set<MaterialState> states) {
                 if (states.contains(MaterialState.selected)) {
-                  return Theme.of(context)
-                      .colorScheme
-                      .primary; // Gym theme primary color
+                  return Theme.of(context).colorScheme.primary; // Gym theme primary color
                 }
                 return Colors.grey.shade200; // Default background color
               },
             ),
             // Button text color based on the selected state
             foregroundColor: MaterialStateProperty.resolveWith<Color>(
-              (Set<MaterialState> states) {
+                  (Set<MaterialState> states) {
                 if (states.contains(MaterialState.selected)) {
                   return Colors.white; // White text for selected button
                 }
@@ -324,7 +311,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _selectedMemberType == MemberType.trainer
+          _selectedMemberType == "trainee"
               ? Localization.membershipTranslations['sports_to_teach']!
               : Localization.membershipTranslations['sports_to_join']!,
           style: TextStyle(
@@ -612,7 +599,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
       double totalPaid = await _calculateTotalPaid(_selectedSports);
 
       // Create the client object
-      final client = Client(
+      final client = Member(
         id: '',
         firstName: _firstNameController.text,
         lastName: _lastNameController.text,
@@ -623,12 +610,13 @@ class _AddClientScreenState extends State<AddClientScreen> {
         totalPaid: totalPaid,
         paymentDates: [],
         sports: _selectedSports,
-        clientIds: _selectedMemberType == MemberType.trainer ? [] : null,
+        clientIds: _selectedMemberType == "trainer" ? [] : null,
         notes: _notesController.text,
+        memberType: _selectedMemberType,
       );
 
       // Add the client to Firestore
-      if (_selectedMemberType == MemberType.trainer) {
+      if (_selectedMemberType == "trainer") {
         // Save client as a trainer
         await FirebaseFirestore.instance.collection('trainers').add(client.toMap());
       } else {

@@ -12,6 +12,7 @@ class Sidebar extends StatefulWidget {
   final Function(String) onFilterChanged;
   final Function(String?) onSportChanged;
   final Function(bool) onExpiredChanged;
+  final Function(bool) onActiveMembersChanged;
 
   const Sidebar({
     Key? key,
@@ -20,6 +21,7 @@ class Sidebar extends StatefulWidget {
     required this.showExpiredOnly,
     required this.onFilterChanged,
     required this.onSportChanged,
+    required this.onActiveMembersChanged,
     required this.onExpiredChanged,
   }) : super(key: key);
 
@@ -31,6 +33,9 @@ class _SidebarState extends State<Sidebar> {
   List<Sport> _sports = [];
   bool _isLoading = true;
   String? _error;
+
+  // State variable to keep track of active/inactive member view
+  bool _showActiveMembers = true;
 
   final Map<String, String> _filterOptions = {
     'All': 'الكل',
@@ -105,6 +110,8 @@ class _SidebarState extends State<Sidebar> {
             _buildSportSection(theme),
             const SizedBox(height: 16),
             _buildExpiredCheckbox(theme),
+            // const SizedBox(height: 16),
+            // _buildToggleButtons(theme)
           ],
         ),
       ),
@@ -237,32 +244,87 @@ class _SidebarState extends State<Sidebar> {
     );
   }
 
+  Widget _buildToggleButtons(ThemeData theme) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20), // Rounded corners
+        color: Colors.transparent, // Transparent background for the container
+      ),
+      child: ToggleButtons(
+        isSelected: [_showActiveMembers, !_showActiveMembers],
+        onPressed: (int index) {
+          setState(() {
+            _showActiveMembers = index == 0; // Set active or inactive based on the index
+            widget.onActiveMembersChanged(index == 0);
+          });
+        },
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0), // Adjust padding
+            child: Text(
+              "غير نشط", // Active
+              style: GoogleFonts.cairo(
+                textStyle: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.bold, // Bold text
+                  color: _showActiveMembers
+                      ? Colors.white // White text for active state
+                      : Colors.black, // Black text for inactive state
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0), // Adjust padding
+            child: Text(
+              "نشط", // Inactive
+              style: GoogleFonts.cairo(
+                textStyle: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.bold, // Bold text
+                  color: !_showActiveMembers
+                      ? Colors.white // White text for inactive state
+                      : Colors.black, // Black text for active state
+                ),
+              ),
+            ),
+          ),
+        ],
+        borderColor: theme.primaryColor,
+        selectedBorderColor: theme.colorScheme.secondary,
+        fillColor: theme.colorScheme.secondary,
+        selectedColor: Colors.white, // White text for selected
+        color: theme.colorScheme.onBackground,
+        borderRadius: BorderRadius.circular(20), // Rounded corners
+        renderBorder: true, // Show border around the buttons
+      ),
+    );
+  }
+
   Widget _buildExpiredCheckbox(ThemeData theme) {
     return Row(
       children: [
         Checkbox(
           value: widget.showExpiredOnly,
-          activeColor: theme.primaryColor,
+          activeColor: theme.colorScheme.primary,
           onChanged: (bool? value) {
             if (value != null) {
               widget.onExpiredChanged(value);
             }
           },
         ),
-        Text(
-          "إظهار المنتهية",
-          style: GoogleFonts.cairo(
-            textStyle: theme.textTheme.bodyMedium,
+        Expanded(
+          child: GestureDetector(
+            onTap: () => widget.onExpiredChanged(!widget.showExpiredOnly),
+            child: Text(
+              "إظهار المنتهية اشتراكاتهم (الذين اكمل الشهر)",
+              style: GoogleFonts.cairo(
+                textStyle: theme.textTheme.bodyMedium,
+                fontSize: 14,
+                fontWeight: FontWeight.w500
+              ),
+            ),
           ),
         ),
       ],
-    );
-  }
-
-  void _navigateToAddClientScreen(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AddClientScreen()),
     );
   }
 }
