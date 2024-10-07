@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:gym_energy/screens/members/add_edit_member_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import '../../model/member.dart';
@@ -24,6 +25,34 @@ class ClientDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(client.fullName, style: GoogleFonts.cairo()),
         centerTitle: true,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) => _handleMenuAction(context, value),
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem<String>(
+                value: 'edit',
+                child: ListTile(
+                  leading: Icon(Icons.edit),
+                  title: Text('تعديل العضو', style: GoogleFonts.cairo()),
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'block',
+                child: ListTile(
+                  leading: Icon(Icons.block),
+                  title: Text('حظر العضو', style: GoogleFonts.cairo()),
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'delete',
+                child: ListTile(
+                  leading: Icon(Icons.delete),
+                  title: Text('حذف العضو', style: GoogleFonts.cairo()),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -48,6 +77,74 @@ class ClientDetailScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _handleMenuAction(BuildContext context, String value) {
+    switch (value) {
+      case 'edit':
+        _editMember(context);
+        break;
+      case 'block':
+        _blockMember(context);
+        break;
+      case 'delete':
+        _deleteMember(context, client);
+        break;
+    }
+  }
+
+  void _editMember(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddEditClientScreen()));
+  }
+
+  void _blockMember(BuildContext context) {
+    // TODO: Implement block member functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('حظر العضو: ${client.fullName}')),
+    );
+  }
+
+  void _deleteMember(BuildContext context, Member client) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('تأكيد الحذف', style: GoogleFonts.cairo()),
+          content: Text('هل أنت متأكد من رغبتك في حذف هذا العضو؟', style: GoogleFonts.cairo()),
+          actions: [
+            TextButton(
+              child: Text('إلغاء', style: GoogleFonts.cairo()),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: Text('حذف', style: GoogleFonts.cairo()),
+              onPressed: () async {
+                // Close the dialog before performing the delete action
+                Navigator.of(context).pop();
+
+                try {
+                  // Deleting member from Firebase Firestore (assuming 'members' collection and client.id exists)
+                  await FirebaseFirestore.instance
+                      .collection('members')
+                      .doc(client.id)
+                      .delete();
+
+                  // Show success message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('تم حذف العضو: ${client.fullName}')),
+                  );
+                } catch (error) {
+                  // Show error message in case of failure
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('حدث خطأ أثناء حذف العضو: ${client.fullName}')),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
