@@ -2,10 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gym_energy/screens/members/add_edit_member_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import '../../model/member.dart';
 import '../../model/sport.dart';
+import '../../provider/members_provider.dart';
 
 class ClientDetailScreen extends StatelessWidget {
   final Member client;
@@ -40,7 +42,7 @@ class ClientDetailScreen extends StatelessWidget {
                 value: 'block',
                 child: ListTile(
                   leading: Icon(Icons.block),
-                  title: Text('حظر العضو', style: GoogleFonts.cairo()),
+                  title: Text(client.isActive ? 'حظر العضو' : 'إلغاء حظر العضو', style: GoogleFonts.cairo()),
                 ),
               ),
               PopupMenuItem<String>(
@@ -54,28 +56,38 @@ class ClientDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(isTablet ? 20 : 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildClientHeader(context, isMembershipExpired),
-              const SizedBox(height: 24),
-              _buildContactInfo(context),
-              const SizedBox(height: 24),
-              _buildMembershipInfo(context, isMembershipExpired),
-              const SizedBox(height: 24),
-              _buildFinancialInfo(context, isTablet),
-              const SizedBox(height: 24),
-              _buildSportsInfo(context),
-              const SizedBox(height: 24),
-              _buildAdditionalInfo(context),
-              const SizedBox(height: 24),
-              _buildActionButtons(context, isMembershipExpired),
-            ],
-          ),
-        ),
+      body: Consumer<MembersProvider>(
+        builder: (context, provider, child) {
+          // Find the updated client in the provider's filtered members list
+          final updatedClient = provider.filteredMembers.firstWhere(
+                (member) => member.id == client.id,
+            orElse: () => client,
+          );
+
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(isTablet ? 20 : 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildClientHeader(context, updatedClient.membershipExpiration.isBefore(DateTime.now())),
+                  const SizedBox(height: 24),
+                  _buildContactInfo(context, ),
+                  const SizedBox(height: 24),
+                  _buildMembershipInfo(context, updatedClient.membershipExpiration.isBefore(DateTime.now()), ),
+                  const SizedBox(height: 24),
+                  _buildFinancialInfo(context, isTablet,),
+                  const SizedBox(height: 24),
+                  _buildSportsInfo(context, ),
+                  const SizedBox(height: 24),
+                  _buildAdditionalInfo(context,),
+                  const SizedBox(height: 24),
+                  _buildActionButtons(context, updatedClient.membershipExpiration.isBefore(DateTime.now()),),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -94,65 +106,26 @@ class ClientDetailScreen extends StatelessWidget {
     }
   }
 
-  void _editMember(BuildContext context) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddEditMemberScreen()));
+  void _editMember(BuildContext context) async {
+    final updatedMember = await Navigator.of(context).push<Member>(
+      MaterialPageRoute(builder: (context) => AddEditMemberScreen(member: client)),
+    );
+    if (updatedMember != null) {
+      Provider.of<MembersProvider>(context, listen: false).editMember(updatedMember);
+    }
   }
 
   void _blockMember(BuildContext context, Member member) async {
-    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
     try {
-      var nameCollection = member.memberType == "trainer" ? "trainers" : "clients";
-
-      // Fetch the member's current data from Firestore
-      DocumentSnapshot memberSnapshot = await _firestore.collection(nameCollection).doc(member.id).get();
-
-      if (memberSnapshot.exists) {
-        final memberData = memberSnapshot.data() as Map<String, dynamic>;
-
-        // Get current isActive status and membershipExpiration
-        bool isActive = memberData['isActive'] ?? true;  // Default to true if null
-        Timestamp? membershipExpirationTimestamp = memberData['membershipExpiration'] as Timestamp?;
-        DateTime? membershipExpiration = membershipExpirationTimestamp?.toDate();
-
-        // Toggle the isActive status
-        bool updatedStatus = !isActive;
-
-        // If the member is being blocked, remove the membership expiration
-        // If the member is being unblocked, set a new expiration date (e.g., 1 year from now)
-        DateTime? updatedExpiration = updatedStatus
-            ? DateTime.now().add(Duration(days: 30)) // Set a new expiration date
-            : null; // Blocked, no expiration
-
-        // Update the member's status in Firestore
-        await _firestore.collection(nameCollection).doc(member.id).update({
-          'isActive': updatedStatus,
-          'membershipExpiration': updatedExpiration != null
-              ? Timestamp.fromDate(updatedExpiration)
-              : null, // Null if blocked
-        });
-
-        // Show feedback to the user
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(updatedStatus
-                ? 'تم تفعيل العضو: ${memberData['firstName']} ${memberData['lastName']}'
-                : 'تم حظر العضو: ${memberData['firstName']} ${memberData['lastName']}'),
-          ),
-        );
-      } else {
-        // Member not found in Firestore
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('لم يتم العثور على العضو.'),
-          ),
-        );
-      }
+      await Provider.of<MembersProvider>(context, listen: false).toggleBlockMember(member);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(member.isActive
+              ? 'تم حظر العضو: ${member.fullName}'
+              : 'تم إلغاء حظر العضو: ${member.fullName}'),
+        ),
+      );
     } catch (e) {
-      // Log the error for debugging
-      print('Error in _blockMember: $e');
-
-      // Handle any errors that occur during the process
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('حدث خطأ أثناء حظر/إلغاء حظر العضو: $e'),
@@ -176,22 +149,14 @@ class ClientDetailScreen extends StatelessWidget {
             TextButton(
               child: Text('حذف', style: GoogleFonts.cairo()),
               onPressed: () async {
-                // Close the dialog before performing the delete action
                 Navigator.of(context).pop();
-
                 try {
-                  // Deleting member from Firebase Firestore (assuming 'members' collection and client.id exists)
-                  await FirebaseFirestore.instance
-                      .collection('members')
-                      .doc(client.id)
-                      .delete();
-
-                  // Show success message
+                  await Provider.of<MembersProvider>(context, listen: false).deleteMember(client);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('تم حذف العضو: ${client.fullName}')),
                   );
+                  Navigator.of(context).pop(); // Close the ClientDetailScreen
                 } catch (error) {
-                  // Show error message in case of failure
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('حدث خطأ أثناء حذف العضو: ${client.fullName}')),
                   );
@@ -203,7 +168,6 @@ class ClientDetailScreen extends StatelessWidget {
       },
     );
   }
-
   Widget _buildClientHeader(BuildContext context, bool isMembershipExpired) {
     return Row(
       children: [

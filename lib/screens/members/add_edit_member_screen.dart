@@ -9,7 +9,8 @@ import '../../model/member.dart';
 import '../../model/sport.dart';
 
 class AddEditMemberScreen extends StatefulWidget {
-  const AddEditMemberScreen({Key? key}) : super(key: key);
+  final Member? member;
+  const AddEditMemberScreen({Key? key, this.member}) : super(key: key);
 
   @override
   State<AddEditMemberScreen> createState() => _AddEditMemberScreenState();

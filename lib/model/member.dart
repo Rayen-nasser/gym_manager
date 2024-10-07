@@ -181,6 +181,7 @@ class Member {
     String? assignedTrainerId,
     List<String>? clientIds,
     String? notes,
+    bool? isActive,
     String? memberType, // Changed to String
     bool? isSubscriber, // Updated to match
   }) {
@@ -197,9 +198,9 @@ class Member {
       sports: sports ?? this.sports,
       assignedTrainerId: assignedTrainerId ?? this.assignedTrainerId,
       clientIds: clientIds ?? this.clientIds,
+      isActive: isActive ?? this.isActive,
       notes: notes ?? this.notes,
       memberType: memberType ?? this.memberType, // Update memberType
-      isActive: isSubscriber ?? this.isActive, // Update isSubscriber
     );
   }
 }

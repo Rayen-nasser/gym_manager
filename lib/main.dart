@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:gym_energy/provider/members_provider.dart';
 import 'package:gym_energy/screens/home_screen.dart';
-import 'package:gym_energy/themes/gym_themes.dart';  // Updated import path
+import 'package:gym_energy/themes/gym_themes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => MembersProvider()..fetchMembers(), // why we write two dots ".."
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -26,7 +33,6 @@ class _MyAppState extends State<MyApp> {
     _loadThemePreference();
   }
 
-  // Load saved theme preference
   Future<void> _loadThemePreference() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -34,13 +40,11 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  // Save theme preference
   Future<void> _saveThemePreference(bool isDark) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isDarkMode', isDark);
   }
 
-  // Toggle theme
   void toggleTheme() {
     setState(() {
       _isDarkMode = !_isDarkMode;
@@ -59,10 +63,9 @@ class _MyAppState extends State<MyApp> {
       ),
       builder: (context, child) {
         return MediaQuery(
-          // Ensure proper text scaling
           data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
           child: Directionality(
-            textDirection: TextDirection.rtl, // Global RTL support for the entire app
+            textDirection: TextDirection.rtl,
             child: child!,
           ),
         );

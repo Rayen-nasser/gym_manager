@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _getScreen(int index) {
     switch (index) {
       case 0:
-        return ClientsScreen(
+        return MembersScreen(
           selectedFilter: _selectedFilter,
           selectedSport: _selectedSport,
           showExpiredOnly: _showExpiredOnly,
