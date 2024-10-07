@@ -109,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
           selectedFilter: _selectedFilter,
           selectedSport: _selectedSport,
           showExpiredOnly: _showExpiredOnly,
+          selectActiveMember: _showActiveMembers,
           onFilterChanged: (filter) {
             setState(() {
               _selectedFilter = filter;

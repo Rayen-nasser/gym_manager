@@ -7,6 +7,7 @@ class Sidebar extends StatefulWidget {
   final String selectedFilter;
   final String? selectedSport;
   final bool showExpiredOnly;
+  final bool selectActiveMember;
   final Function(String) onFilterChanged;
   final Function(String?) onSportChanged;
   final Function(bool) onExpiredChanged;
@@ -17,6 +18,7 @@ class Sidebar extends StatefulWidget {
     required this.selectedFilter,
     required this.selectedSport,
     required this.showExpiredOnly,
+    required this.selectActiveMember,
     required this.onFilterChanged,
     required this.onSportChanged,
     required this.onActiveMembersChanged,
@@ -31,7 +33,6 @@ class _SidebarState extends State<Sidebar> {
   List<Sport> _sports = [];
   bool _isLoading = true;
   String? _error;
-  bool _showActiveMembers = true;
 
   final Map<String, String> _filterOptions = {
     'All': 'الكل',
@@ -221,16 +222,16 @@ class _SidebarState extends State<Sidebar> {
             child: _buildToggleButton(
               theme,
               "نشط",
-              _showActiveMembers,
-                  () => _toggleActiveStatus(true),
+              widget.selectActiveMember,
+                  () => widget.onActiveMembersChanged(true),
             ),
           ),
           Expanded(
             child: _buildToggleButton(
               theme,
               "غير نشط",
-              !_showActiveMembers,
-                  () => _toggleActiveStatus(false),
+              !widget.selectActiveMember,
+                  () => widget.onActiveMembersChanged(false),
             ),
           ),
         ],
@@ -260,13 +261,6 @@ class _SidebarState extends State<Sidebar> {
         ),
       ),
     );
-  }
-
-  void _toggleActiveStatus(bool isActive) {
-    setState(() {
-      _showActiveMembers = isActive;
-      widget.onActiveMembersChanged(isActive);
-    });
   }
 
   Widget _buildExpiredCheckbox(ThemeData theme) {
