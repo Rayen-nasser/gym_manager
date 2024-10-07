@@ -12,8 +12,10 @@ class MembersProvider with ChangeNotifier {
   bool showExpiredOnly = false;
   bool showActiveMembers = true;
 
+  // Getter for filtered members
   List<client_model.Member> get filteredMembers => _filteredMembers;
 
+  // Fetch members from Firestore
   Future<void> fetchMembers() async {
     final clientSnapshot = await FirebaseFirestore.instance.collection('clients').get();
     final trainerSnapshot = await FirebaseFirestore.instance.collection('trainers').get();
@@ -28,11 +30,13 @@ class MembersProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Update search query and reapply filters
   void updateSearchQuery(String query) {
     _searchQuery = query;
     _applyFilters();
   }
 
+  // Update filters and reapply them
   void updateFilters({
     required String filter,
     required String? sport,
@@ -46,6 +50,7 @@ class MembersProvider with ChangeNotifier {
     _applyFilters();
   }
 
+  // Apply the filters to _allMembers and set _filteredMembers
   void _applyFilters() {
     _filteredMembers = _allMembers.where((client) {
       final matchesFilter = selectedFilter == 'All' ||
@@ -69,6 +74,7 @@ class MembersProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Edit member details
   Future<void> editMember(client_model.Member updatedMember) async {
     final collection = updatedMember.memberType == "trainer" ? "trainers" : "clients";
     await FirebaseFirestore.instance.collection(collection).doc(updatedMember.id).update(updatedMember.toMap());
@@ -80,6 +86,7 @@ class MembersProvider with ChangeNotifier {
     }
   }
 
+  // Delete a member
   Future<void> deleteMember(client_model.Member member) async {
     final collection = member.memberType == "trainer" ? "trainers" : "clients";
     await FirebaseFirestore.instance.collection(collection).doc(member.id).delete();
@@ -88,6 +95,7 @@ class MembersProvider with ChangeNotifier {
     _applyFilters();
   }
 
+  // Block or unblock a member
   Future<void> toggleBlockMember(client_model.Member member) async {
     final collection = member.memberType == "trainer" ? "trainers" : "clients";
     final updatedStatus = !member.isActive;

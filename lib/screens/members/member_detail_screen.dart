@@ -24,11 +24,56 @@ class MemberDetailScreen extends StatelessWidget {
 
     return Consumer<MembersProvider>(
       builder: (context, provider, child) {
-        // Find the current client data from provider
-        final member = provider.filteredMembers.firstWhere(
-              (m) => m.id == memberId,
-          orElse: () => throw Exception('Member not found'),
-        );
+        // Find the member in all members first, not just filtered
+        Member? member;
+        try {
+          member = provider.filteredMembers.firstWhere(
+                (m) => m.id == memberId,
+            orElse: () => throw Exception('Member not found'),
+          );
+        } catch (e) {
+          // Handle the case where member is not found
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Member Details', style: GoogleFonts.cairo()),
+              centerTitle: true,
+            ),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Member not found',
+                    style: GoogleFonts.cairo(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'The requested member could not be found',
+                    style: GoogleFonts.cairo(
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text('Go Back', style: GoogleFonts.cairo()),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final isExpired = member.membershipExpiration.isBefore(DateTime.now());
 
         return Scaffold(
           appBar: AppBar(
@@ -36,7 +81,7 @@ class MemberDetailScreen extends StatelessWidget {
             centerTitle: true,
             actions: [
               PopupMenuButton<String>(
-                onSelected: (value) => _handleMenuAction(context, value, member),
+                onSelected: (value) => _handleMenuAction(context, value, member!),
                 itemBuilder: (BuildContext context) => [
                   PopupMenuItem<String>(
                     value: 'edit',
@@ -49,7 +94,7 @@ class MemberDetailScreen extends StatelessWidget {
                     value: 'block',
                     child: ListTile(
                       leading: Icon(Icons.block),
-                      title: Text(member.isActive ? 'حظر العضو' : 'إلغاء حظر العضو', style: GoogleFonts.cairo()),
+                      title: Text(member!.isActive ? 'حظر العضو' : 'إلغاء حظر العضو', style: GoogleFonts.cairo()),
                     ),
                   ),
                   PopupMenuItem<String>(
@@ -69,11 +114,11 @@ class MemberDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildClientHeader(context, member.membershipExpiration.isBefore(DateTime.now()), member),
+                  _buildClientHeader(context, isExpired, member),
                   const SizedBox(height: 24),
                   _buildContactInfo(context, member),
                   const SizedBox(height: 24),
-                  _buildMembershipInfo(context, member.membershipExpiration.isBefore(DateTime.now()), member),
+                  _buildMembershipInfo(context, isExpired, member),
                   const SizedBox(height: 24),
                   _buildFinancialInfo(context, isTablet, member),
                   const SizedBox(height: 24),
@@ -81,7 +126,7 @@ class MemberDetailScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   _buildAdditionalInfo(context, member),
                   const SizedBox(height: 24),
-                  _buildActionButtons(context, member.membershipExpiration.isBefore(DateTime.now()), member),
+                  _buildActionButtons(context, isExpired, member),
                 ],
               ),
             ),
@@ -119,6 +164,7 @@ class MemberDetailScreen extends StatelessWidget {
   void _blockMember(BuildContext context, Member member) async {
     try {
       await Provider.of<MembersProvider>(context, listen: false).toggleBlockMember(member);
+      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(member.isActive
