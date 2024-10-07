@@ -97,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Action to navigate to Add Client Screen or open a dialog
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AddEditClientScreen()),
+                  MaterialPageRoute(builder: (context) => AddEditMemberScreen()),
                 );
               },
             ),

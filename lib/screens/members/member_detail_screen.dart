@@ -86,7 +86,7 @@ class ClientDetailScreen extends StatelessWidget {
         _editMember(context);
         break;
       case 'block':
-        _blockMember(context);
+        _blockMember(context, client);
         break;
       case 'delete':
         _deleteMember(context, client);
@@ -95,14 +95,70 @@ class ClientDetailScreen extends StatelessWidget {
   }
 
   void _editMember(BuildContext context) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddEditClientScreen()));
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddEditMemberScreen()));
   }
 
-  void _blockMember(BuildContext context) {
-    // TODO: Implement block member functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('حظر العضو: ${client.fullName}')),
-    );
+  void _blockMember(BuildContext context, Member member) async {
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+    try {
+      var nameCollection = member.memberType == "trainer" ? "trainers" : "clients";
+
+      // Fetch the member's current data from Firestore
+      DocumentSnapshot memberSnapshot = await _firestore.collection(nameCollection).doc(member.id).get();
+
+      if (memberSnapshot.exists) {
+        final memberData = memberSnapshot.data() as Map<String, dynamic>;
+
+        // Get current isActive status and membershipExpiration
+        bool isActive = memberData['isActive'] ?? true;  // Default to true if null
+        Timestamp? membershipExpirationTimestamp = memberData['membershipExpiration'] as Timestamp?;
+        DateTime? membershipExpiration = membershipExpirationTimestamp?.toDate();
+
+        // Toggle the isActive status
+        bool updatedStatus = !isActive;
+
+        // If the member is being blocked, remove the membership expiration
+        // If the member is being unblocked, set a new expiration date (e.g., 1 year from now)
+        DateTime? updatedExpiration = updatedStatus
+            ? DateTime.now().add(Duration(days: 30)) // Set a new expiration date
+            : null; // Blocked, no expiration
+
+        // Update the member's status in Firestore
+        await _firestore.collection(nameCollection).doc(member.id).update({
+          'isActive': updatedStatus,
+          'membershipExpiration': updatedExpiration != null
+              ? Timestamp.fromDate(updatedExpiration)
+              : null, // Null if blocked
+        });
+
+        // Show feedback to the user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(updatedStatus
+                ? 'تم تفعيل العضو: ${memberData['firstName']} ${memberData['lastName']}'
+                : 'تم حظر العضو: ${memberData['firstName']} ${memberData['lastName']}'),
+          ),
+        );
+      } else {
+        // Member not found in Firestore
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('لم يتم العثور على العضو.'),
+          ),
+        );
+      }
+    } catch (e) {
+      // Log the error for debugging
+      print('Error in _blockMember: $e');
+
+      // Handle any errors that occur during the process
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('حدث خطأ أثناء حظر/إلغاء حظر العضو: $e'),
+        ),
+      );
+    }
   }
 
   void _deleteMember(BuildContext context, Member client) {

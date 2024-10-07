@@ -8,14 +8,14 @@ import '../../localization.dart';
 import '../../model/member.dart';
 import '../../model/sport.dart';
 
-class AddEditClientScreen extends StatefulWidget {
-  const AddEditClientScreen({Key? key}) : super(key: key);
+class AddEditMemberScreen extends StatefulWidget {
+  const AddEditMemberScreen({Key? key}) : super(key: key);
 
   @override
-  State<AddEditClientScreen> createState() => _AddEditClientScreenState();
+  State<AddEditMemberScreen> createState() => _AddEditMemberScreenState();
 }
 
-class _AddEditClientScreenState extends State<AddEditClientScreen> {
+class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
   final _formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();

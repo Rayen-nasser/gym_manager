@@ -59,7 +59,9 @@ class Member {
       email: data['email'] ?? '',
       phoneNumber: data['phoneNumber'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      membershipExpiration: (data['membershipExpiration'] as Timestamp).toDate(),
+      membershipExpiration: (data['membershipExpiration'] != null && data['membershipExpiration'] is Timestamp)
+          ? (data['membershipExpiration'] as Timestamp).toDate()
+          : DateTime.now(), // Default to current date if null
       totalPaid: (data['totalPaid'] ?? 0.0).toDouble(),
       paymentDates: (data['paymentDates'] as List<dynamic>? ?? [])
           .map((date) => (date as Timestamp).toDate())
