@@ -30,30 +30,35 @@ class _MembersScreenState extends State<MembersScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<MembersProvider>(context, listen: false);
       provider.fetchMembers();
-      provider.updateFilters(
-        filter: widget.selectedFilter,
-        sport: widget.selectedSport,
-        expiredOnly: widget.showExpiredOnly,
-        activeMembers: widget.showActiveMembers,
-      );
+      _updateFilters(provider);
     });
   }
 
   @override
   void didUpdateWidget(MembersScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedFilter != widget.selectedFilter ||
+    if (_hasFiltersChanged(oldWidget)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final provider = Provider.of<MembersProvider>(context, listen: false);
+        _updateFilters(provider);
+      });
+    }
+  }
+
+  bool _hasFiltersChanged(MembersScreen oldWidget) {
+    return oldWidget.selectedFilter != widget.selectedFilter ||
         oldWidget.selectedSport != widget.selectedSport ||
         oldWidget.showExpiredOnly != widget.showExpiredOnly ||
-        oldWidget.showActiveMembers != widget.showActiveMembers) {
-      final provider = Provider.of<MembersProvider>(context, listen: false);
-      provider.updateFilters(
-        filter: widget.selectedFilter,
-        sport: widget.selectedSport,
-        expiredOnly: widget.showExpiredOnly,
-        activeMembers: widget.showActiveMembers,
-      );
-    }
+        oldWidget.showActiveMembers != widget.showActiveMembers;
+  }
+
+  void _updateFilters(MembersProvider provider) {
+    provider.updateFilters(
+      filter: widget.selectedFilter,
+      sport: widget.selectedSport,
+      expiredOnly: widget.showExpiredOnly,
+      activeMembers: widget.showActiveMembers,
+    );
   }
 
   @override
@@ -80,19 +85,19 @@ class _MembersScreenState extends State<MembersScreen> {
                 ),
                 itemCount: filteredMembers.length,
                 itemBuilder: (context, index) {
-                  final client = filteredMembers[index];
+                  final member = filteredMembers[index];
                   return GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ClientDetailScreen(client: client),
+                          builder: (context) => MemberDetailScreen(memberId: member.id),
                         ),
                       );
                     },
                     child: isTablet
-                        ? TabletClientCartWidget(client: client)
-                        : PhoneCartClientWidget(client: client),
+                        ? TabletClientCartWidget(member: member)
+                        : PhoneCartClientWidget(member: member),
                   );
                 },
               );

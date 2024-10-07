@@ -593,7 +593,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       double totalPaid = await _calculateTotalPaid(_selectedSports);
 
       // Create the Member object
-      final client = Member(
+      final member = Member(
         id: widget.member?.id ?? '',
         firstName: _firstNameController.text,
         lastName: _lastNameController.text,
@@ -610,51 +610,45 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       );
 
       WriteBatch batch = FirebaseFirestore.instance.batch();
+      late DocumentReference memberRef;
 
       if (widget.member == null) {
         // Add a new client/member using batched write
-        DocumentReference clientRef = FirebaseFirestore.instance.collection('clients').doc();
-        batch.set(clientRef, client.toMap());
+        memberRef = FirebaseFirestore.instance.collection('clients').doc();
+        batch.set(memberRef, member.toMap());
 
         // Add to trainer if selected
         if (_selectedTrainerId != null) {
           batch.update(
             FirebaseFirestore.instance.collection('trainers').doc(_selectedTrainerId),
-            {'clientIds': FieldValue.arrayUnion([clientRef.id])},
+            {'clientIds': FieldValue.arrayUnion([memberRef.id])},
           );
           // Call the _addClientToTrainer function after the batch update
-          await _addClientToTrainer(clientRef.id, _selectedTrainerId!);
+          await _addClientToTrainer(memberRef.id, _selectedTrainerId!);
         }
       } else {
         // Edit existing member using batched write
-        DocumentReference clientRef;
-        print('Updating : ${widget.member!.memberType}');
-        if(client.memberType == "trainee") {
-
-           clientRef = FirebaseFirestore.instance.collection('clients').doc(widget.member!.id);
+        if(member.memberType == "trainee") {
+          memberRef = FirebaseFirestore.instance.collection('clients').doc(widget.member!.id);
         } else {
-           clientRef = FirebaseFirestore.instance.collection('trainers').doc(widget.member!.id);
+          memberRef = FirebaseFirestore.instance.collection('trainers').doc(widget.member!.id);
         }
 
-        // Log the document ID
-        print('Updating client with ID: ${widget.member!.id}');
-
-        // Check if the client document exists before updating
-        DocumentSnapshot clientDoc = await clientRef.get();
-        if (!clientDoc.exists) {
-          _showSnackBar('Client document not found.', Colors.red);
-          print('Client document not found for ID: ${widget.member!.id}'); // Log the issue
+        // Check if the document exists before updating
+        DocumentSnapshot memberDoc = await memberRef.get();
+        if (!memberDoc.exists) {
+          _showSnackBar('Member document not found.', Colors.red);
+          print('Member document not found for ID: ${widget.member!.id}');
           return;
         }
 
-        batch.update(clientRef, client.toMap());
+        batch.update(memberRef, member.toMap());
 
         if (_selectedTrainerId != null) {
           batch.update(
             FirebaseFirestore.instance.collection('trainers').doc(_selectedTrainerId),
             {'clientIds': FieldValue.arrayUnion([widget.member!.id])},
           );
-          // Call the _addClientToTrainer function after the batch update
           await _addClientToTrainer(widget.member!.id, _selectedTrainerId!);
         }
       }
@@ -662,11 +656,18 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       // Commit the batch write
       await batch.commit();
 
+      // Fetch the updated document to get the latest data
+      final updatedDoc = await memberRef.get();
+      final updatedMember = Member.fromMap(
+        updatedDoc.data() as Map<String, dynamic>,
+        updatedDoc.id,
+      );
+
       _showSnackBar(Localization.membershipTranslations['success']!, Colors.green);
-      Navigator.pop(context);
+      Navigator.pop(context, updatedMember); // Return the updated Member object
     } catch (e) {
       _showSnackBar('${Localization.membershipTranslations['error']}: $e', Colors.red);
-      print('Error occurred: $e'); // Log the error for debugging
+      print('Error occurred: $e');
     } finally {
       setState(() => _isLoading = false);
     }

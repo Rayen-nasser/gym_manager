@@ -9,109 +9,110 @@ import '../../model/member.dart';
 import '../../model/sport.dart';
 import '../../provider/members_provider.dart';
 
-class ClientDetailScreen extends StatelessWidget {
-  final Member client;
+class MemberDetailScreen extends StatelessWidget {
+  final String memberId;
 
-  const ClientDetailScreen({
+  const MemberDetailScreen({
     Key? key,
-    required this.client,
+    required this.memberId,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth > 600;
-    bool isMembershipExpired = client.membershipExpiration.isBefore(DateTime.now());
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(client.fullName, style: GoogleFonts.cairo()),
-        centerTitle: true,
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) => _handleMenuAction(context, value),
-            itemBuilder: (BuildContext context) => [
-              PopupMenuItem<String>(
-                value: 'edit',
-                child: ListTile(
-                  leading: Icon(Icons.edit),
-                  title: Text('تعديل العضو', style: GoogleFonts.cairo()),
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'block',
-                child: ListTile(
-                  leading: Icon(Icons.block),
-                  title: Text(client.isActive ? 'حظر العضو' : 'إلغاء حظر العضو', style: GoogleFonts.cairo()),
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'delete',
-                child: ListTile(
-                  leading: Icon(Icons.delete),
-                  title: Text('حذف العضو', style: GoogleFonts.cairo()),
-                ),
+    return Consumer<MembersProvider>(
+      builder: (context, provider, child) {
+        // Find the current client data from provider
+        final member = provider.filteredMembers.firstWhere(
+              (m) => m.id == memberId,
+          orElse: () => throw Exception('Member not found'),
+        );
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(member.fullName, style: GoogleFonts.cairo()),
+            centerTitle: true,
+            actions: [
+              PopupMenuButton<String>(
+                onSelected: (value) => _handleMenuAction(context, value, member),
+                itemBuilder: (BuildContext context) => [
+                  PopupMenuItem<String>(
+                    value: 'edit',
+                    child: ListTile(
+                      leading: Icon(Icons.edit),
+                      title: Text('تعديل العضو', style: GoogleFonts.cairo()),
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'block',
+                    child: ListTile(
+                      leading: Icon(Icons.block),
+                      title: Text(member.isActive ? 'حظر العضو' : 'إلغاء حظر العضو', style: GoogleFonts.cairo()),
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'delete',
+                    child: ListTile(
+                      leading: Icon(Icons.delete),
+                      title: Text('حذف العضو', style: GoogleFonts.cairo()),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
-      body: Consumer<MembersProvider>(
-        builder: (context, provider, child) {
-          // Find the updated client in the provider's filtered members list
-          final updatedClient = provider.filteredMembers.firstWhere(
-                (member) => member.id == client.id,
-            orElse: () => client,
-          );
-
-          return SingleChildScrollView(
+          body: SingleChildScrollView(
             child: Padding(
               padding: EdgeInsets.all(isTablet ? 20 : 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildClientHeader(context, updatedClient.membershipExpiration.isBefore(DateTime.now())),
+                  _buildClientHeader(context, member.membershipExpiration.isBefore(DateTime.now()), member),
                   const SizedBox(height: 24),
-                  _buildContactInfo(context, ),
+                  _buildContactInfo(context, member),
                   const SizedBox(height: 24),
-                  _buildMembershipInfo(context, updatedClient.membershipExpiration.isBefore(DateTime.now()), ),
+                  _buildMembershipInfo(context, member.membershipExpiration.isBefore(DateTime.now()), member),
                   const SizedBox(height: 24),
-                  _buildFinancialInfo(context, isTablet,),
+                  _buildFinancialInfo(context, isTablet, member),
                   const SizedBox(height: 24),
-                  _buildSportsInfo(context, ),
+                  _buildSportsInfo(context, member),
                   const SizedBox(height: 24),
-                  _buildAdditionalInfo(context,),
+                  _buildAdditionalInfo(context, member),
                   const SizedBox(height: 24),
-                  _buildActionButtons(context, updatedClient.membershipExpiration.isBefore(DateTime.now()),),
+                  _buildActionButtons(context, member.membershipExpiration.isBefore(DateTime.now()), member),
                 ],
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
-  void _handleMenuAction(BuildContext context, String value) {
+
+  void _handleMenuAction(BuildContext context, String value, Member member) {
     switch (value) {
       case 'edit':
-        _editMember(context);
+        _editMember(context, member);
         break;
       case 'block':
-        _blockMember(context, client);
+        _blockMember(context, member);
         break;
       case 'delete':
-        _deleteMember(context, client);
+        _deleteMember(context, member);
         break;
     }
   }
 
-  void _editMember(BuildContext context) async {
+  Future<void> _editMember(BuildContext context, Member member) async {
     final updatedMember = await Navigator.of(context).push<Member>(
-      MaterialPageRoute(builder: (context) => AddEditMemberScreen(member: client)),
+      MaterialPageRoute(builder: (context) => AddEditMemberScreen(member: member)),
     );
+
     if (updatedMember != null) {
-      Provider.of<MembersProvider>(context, listen: false).editMember(updatedMember);
+      await Provider.of<MembersProvider>(context, listen: false).fetchMembers();
     }
   }
 
@@ -168,14 +169,15 @@ class ClientDetailScreen extends StatelessWidget {
       },
     );
   }
-  Widget _buildClientHeader(BuildContext context, bool isMembershipExpired) {
+
+  Widget _buildClientHeader(BuildContext context, bool isMembershipExpired, Member member) {
     return Row(
       children: [
         CircleAvatar(
           radius: 40,
           backgroundColor: Theme.of(context).primaryColor,
           child: Text(
-            client.fullName.substring(0, 2).toUpperCase(),
+            member.fullName.substring(0, 2).toUpperCase(),
             style: GoogleFonts.cairo(fontSize: 24, color: Colors.white),
           ),
         ),
@@ -185,7 +187,7 @@ class ClientDetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                client.fullName,
+                member.fullName,
                 style: GoogleFonts.cairo(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
@@ -216,7 +218,7 @@ class ClientDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContactInfo(BuildContext context) {
+  Widget _buildContactInfo(BuildContext context, Member member) {
     return Card(
       elevation: 4,
       child: Padding(
@@ -226,16 +228,16 @@ class ClientDetailScreen extends StatelessWidget {
           children: [
             Text('معلومات الاتصال', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            _buildInfoRow(Icons.email, 'البريد الإلكتروني:', client.email, context),
+            _buildInfoRow(Icons.email, 'البريد الإلكتروني:', member.email, context),
             const SizedBox(height: 8),
-            _buildInfoRow(Icons.phone, 'رقم الهاتف:', client.phoneNumber, context),
+            _buildInfoRow(Icons.phone, 'رقم الهاتف:', member.phoneNumber, context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFinancialInfo(BuildContext context, bool isTablet) {
+  Widget _buildFinancialInfo(BuildContext context, bool isTablet, Member member) {
     return Card(
       elevation: 4,
       child: Padding(
@@ -245,7 +247,7 @@ class ClientDetailScreen extends StatelessWidget {
           children: [
             Text('المعلومات المالية', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
-            _buildTotalPaid(context, isTablet),
+            _buildTotalPaid(context, isTablet, member),
             const SizedBox(height: 8),
             Text(
               'تواريخ الدفع:',
@@ -254,7 +256,7 @@ class ClientDetailScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: client.paymentDates.map((date) => Text(
+              children: member.paymentDates.map((date) => Text(
                 DateFormat('yyyy-MM-dd').format(date),
                 style: GoogleFonts.cairo(fontSize: 14),
               )).toList(),
@@ -265,7 +267,7 @@ class ClientDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTotalPaid(BuildContext context, bool isTablet) { // Add isTablet parameter
+  Widget _buildTotalPaid(BuildContext context, bool isTablet, Member member) { // Add isTablet parameter
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -286,7 +288,7 @@ class ClientDetailScreen extends StatelessWidget {
             ),
           ),
           Text(
-            '${client.totalSportPrices().toStringAsFixed(2)} دينار',
+            '${member.totalSportPrices().toStringAsFixed(2)} دينار',
             style: TextStyle(
               fontSize: isTablet ? 14 : 18, // Adjust font size for tablets
               fontWeight: FontWeight.bold,
@@ -299,7 +301,7 @@ class ClientDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSportsInfo(BuildContext context) {
+  Widget _buildSportsInfo(BuildContext context, Member member) {
     return Card(
       elevation: 4,
       child: Padding(
@@ -310,7 +312,7 @@ class ClientDetailScreen extends StatelessWidget {
             Text('الرياضات المسجلة', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Column(
-              children: client.sports.map((sport) => _buildSportItem(sport, context)).toList(),
+              children: member.sports.map((sport) => _buildSportItem(sport, context)).toList(),
             ),
           ],
         ),
@@ -326,7 +328,7 @@ class ClientDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAdditionalInfo(BuildContext context) {
+  Widget _buildAdditionalInfo(BuildContext context, Member member) {
     return Card(
       elevation: 4,
       child: Padding(
@@ -336,11 +338,11 @@ class ClientDetailScreen extends StatelessWidget {
           children: [
             Text('معلومات إضافية', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            _buildInfoRow(Icons.calendar_today, 'تاريخ الإنشاء:', DateFormat('yyyy-MM-dd').format(client.createdAt), context),
-            if (client.assignedTrainerId != null) ...[
+            _buildInfoRow(Icons.calendar_today, 'تاريخ الإنشاء:', DateFormat('yyyy-MM-dd').format(member.createdAt), context),
+            if (member.assignedTrainerId != null) ...[
               const SizedBox(height: 8),
               FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance.collection('trainers').doc(client.assignedTrainerId).get(),
+                future: FirebaseFirestore.instance.collection('trainers').doc(member.assignedTrainerId).get(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return CircularProgressIndicator();
@@ -367,15 +369,15 @@ class ClientDetailScreen extends StatelessWidget {
                 },
               ),
             ],
-            if (client.clientIds != null && client.clientIds!.isNotEmpty) ...[
+            if (member.clientIds != null && member.clientIds!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              _buildInfoRow(Icons.group, 'عدد العملاء:', client.clientIds!.length.toString(), context),
+              _buildInfoRow(Icons.group, 'عدد العملاء:', member.clientIds!.length.toString(), context),
               const SizedBox(height: 8),
               Text('الرياضات التي يدربها:', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: client.sports.map((sport) =>
+                children: member.sports.map((sport) =>
                     Padding(
                       padding: const EdgeInsets.only(left: 16, top: 4),
                       child: Text(
@@ -386,9 +388,9 @@ class ClientDetailScreen extends StatelessWidget {
                 ).toList(),
               ),
             ],
-            if (client.notes != null && client.notes!.isNotEmpty) ...[
+            if (member.notes != null && member.notes!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              _buildInfoRow(Icons.note, 'ملاحظات:', client.notes!, context),
+              _buildInfoRow(Icons.note, 'ملاحظات:', member.notes!, context),
             ],
           ],
         ),
@@ -396,8 +398,8 @@ class ClientDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMembershipInfo(BuildContext context, bool isExpired) {
-    final expirationDate = DateFormat('yyyy-MM-dd').format(client.membershipExpiration);
+  Widget _buildMembershipInfo(BuildContext context, bool isExpired, Member member) {
+    final expirationDate = DateFormat('yyyy-MM-dd').format(member.membershipExpiration);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -429,7 +431,7 @@ class ClientDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, bool isExpired) {
+  Widget _buildActionButtons(BuildContext context, bool isExpired, Member member) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -439,7 +441,7 @@ class ClientDetailScreen extends StatelessWidget {
             context: context,
             icon: Icons.email,
             label: 'البريد',
-            onPressed: () => _launchEmail(context, client.email),
+            onPressed: () => _launchEmail(context, member.email),
             color: Colors.blue,
           ),
           const SizedBox(width: 8),
@@ -447,7 +449,7 @@ class ClientDetailScreen extends StatelessWidget {
             context: context,
             icon: Icons.call,
             label: 'اتصال',
-            onPressed: () => _launchCall(context, client.phoneNumber),
+            onPressed: () => _launchCall(context, member.phoneNumber),
             color: Colors.green,
           ),
           const SizedBox(width: 8),
@@ -456,7 +458,7 @@ class ClientDetailScreen extends StatelessWidget {
             icon: Icons.refresh,
             label: 'تجديد',
             onPressed: isExpired
-                ? () => _renewMembership(context)
+                ? () => _renewMembership(context, member)
                 : () => _showMembershipActiveMessage(context),
             color: Colors.orange,
           ),
@@ -564,13 +566,13 @@ class ClientDetailScreen extends StatelessWidget {
     }
   }
 
-  void _renewMembership(BuildContext context) async {
+  void _renewMembership(BuildContext context, Member member) async {
     DateTime newExpirationDate = DateTime.now().add(Duration(days: 30));
-    double renewalFee = client.totalSportPrices();
+    double renewalFee = member.totalSportPrices();
 
     try {
       // Update Firestore
-      await FirebaseFirestore.instance.collection('clients').doc(client.id).update({
+      await FirebaseFirestore.instance.collection('clients').doc(member.id).update({
         'membershipExpiration': Timestamp.fromDate(newExpirationDate),
         'paymentDates': FieldValue.arrayUnion([Timestamp.fromDate(DateTime.now())]),
         'totalPaid': FieldValue.increment(renewalFee),

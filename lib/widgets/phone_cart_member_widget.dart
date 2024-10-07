@@ -5,17 +5,17 @@ import '../model/member.dart';
 import '../screens/members/member_detail_screen.dart';
 
 class PhoneCartClientWidget extends StatelessWidget {
-  final Member client;
+  final Member member;
 
   const PhoneCartClientWidget({
     Key? key,
-    required this.client,
+    required this.member,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    bool isMembershipExpired = client.membershipExpiration.isBefore(DateTime.now());
+    bool isMembershipExpired = member.membershipExpiration.isBefore(DateTime.now());
 
     return Card(
       elevation: 2,
@@ -27,7 +27,7 @@ class PhoneCartClientWidget extends StatelessWidget {
           // Navigate to the client detail screen on tap
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => ClientDetailScreen(client: client)),
+            MaterialPageRoute(builder: (context) => MemberDetailScreen(memberId: member.id)),
           );
         },
         child: Padding(
@@ -68,7 +68,7 @@ class PhoneCartClientWidget extends StatelessWidget {
       radius: 20,
       backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
       child: Text(
-        client.firstName[0].toUpperCase(),
+        member.firstName[0].toUpperCase(),
         style: GoogleFonts.cairo(
           fontSize: 18,
           fontWeight: FontWeight.bold,
@@ -80,7 +80,7 @@ class PhoneCartClientWidget extends StatelessWidget {
 
   Widget _buildName(ThemeData theme) {
     return Text(
-      '${client.firstName} ${client.lastName}',
+      '${member.firstName} ${member.lastName}',
       style: GoogleFonts.cairo(
         fontSize: 16,
         fontWeight: FontWeight.bold,
@@ -92,7 +92,7 @@ class PhoneCartClientWidget extends StatelessWidget {
 
   Widget _buildTotalPaid(ThemeData theme) {
     return Text(
-      '${client.totalSportPrices().toStringAsFixed(2)} دينار',
+      '${member.totalSportPrices().toStringAsFixed(2)} دينار',
       style: GoogleFonts.cairo(
         fontSize: 14,
         color: theme.colorScheme.primary,
@@ -103,7 +103,7 @@ class PhoneCartClientWidget extends StatelessWidget {
 
   Widget _buildExpirationDate(ThemeData theme) {
     return Text(
-      DateFormat('yyyy-MM-dd').format(client.membershipExpiration),
+      DateFormat('yyyy-MM-dd').format(member.membershipExpiration),
       style: GoogleFonts.cairo(
         fontSize: 12,
         color: theme.colorScheme.onSurfaceVariant,

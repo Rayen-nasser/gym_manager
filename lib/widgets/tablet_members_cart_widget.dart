@@ -5,17 +5,17 @@ import '../model/member.dart';
 import '../screens/members/member_detail_screen.dart';
 
 class TabletClientCartWidget extends StatelessWidget {
-  final Member client;
+  final Member member;
 
   const TabletClientCartWidget({
     Key? key,
-    required this.client,
+    required this.member,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     bool isMembershipExpired =
-    client.membershipExpiration.isBefore(DateTime.now());
+    member.membershipExpiration.isBefore(DateTime.now());
 
     return Card(
       elevation: 4,
@@ -27,7 +27,7 @@ class TabletClientCartWidget extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => ClientDetailScreen(client: client)),
+                builder: (context) => MemberDetailScreen(memberId: member.id)),
           );
         },
         child: Container(
@@ -68,7 +68,7 @@ class TabletClientCartWidget extends StatelessWidget {
         CircleAvatar(
           backgroundColor: Theme.of(context).primaryColor,
           child: Text(
-            client.firstName[0].toUpperCase(),
+            member.firstName[0].toUpperCase(),
             style: GoogleFonts.cairo(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -78,7 +78,7 @@ class TabletClientCartWidget extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: Text(
-            '${client.firstName} ${client.lastName}',
+            '${member.firstName} ${member.lastName}',
             style: GoogleFonts.cairo(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -110,7 +110,7 @@ class TabletClientCartWidget extends StatelessWidget {
             ),
           ),
           Text(
-            '${client.totalSportPrices().toStringAsFixed(2)} دينار',
+            '${member.totalSportPrices().toStringAsFixed(2)} دينار',
             style: GoogleFonts.cairo(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -124,7 +124,7 @@ class TabletClientCartWidget extends StatelessWidget {
 
   Widget buildMembershipInfo(BuildContext context, bool isExpired) {
     final expirationDate =
-    DateFormat('yyyy-MM-dd').format(client.membershipExpiration);
+    DateFormat('yyyy-MM-dd').format(member.membershipExpiration);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
