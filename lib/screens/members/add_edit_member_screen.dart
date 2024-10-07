@@ -33,12 +33,18 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize date formatting for the current locale
-    initializeDateFormatting('ar', null).then((_) {
-      setState(() {
-        // Now you can safely use DateFormat here or in other parts of the widget.
-      });
-    });
+    // If member data is passed, initialize the form fields for editing
+    if (widget.member != null) {
+      _firstNameController.text = widget.member!.firstName;
+      _lastNameController.text = widget.member!.lastName;
+      _emailController.text = widget.member!.email;
+      _phoneController.text = widget.member!.phoneNumber;
+      _notesController.text = widget.member!.notes ?? '';
+      _selectedMemberType = widget.member!.memberType;
+      _membershipExpiration = widget.member!.membershipExpiration;
+      _selectedTrainerId = widget.member!.assignedTrainerId;
+      _selectedSports = widget.member!.sports ?? [];
+    }
   }
 
   @override
@@ -570,105 +576,124 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
   }
 
   Future<void> _submitForm() async {
-    // Validate the form first
     if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(Localization.membershipTranslations['fill_required']!),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar(Localization.membershipTranslations['fill_required']!, Colors.red);
       return;
     }
 
-    // Ensure a sport is selected
     if (_selectedSports.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(Localization.membershipTranslations['select_sport']!),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar(Localization.membershipTranslations['select_sport']!, Colors.red);
       return;
     }
 
-    // Set loading state to true
     setState(() => _isLoading = true);
 
     try {
-      // Calculate the total paid based on selected sports
+      // Calculate the total paid based on selected sports asynchronously
       double totalPaid = await _calculateTotalPaid(_selectedSports);
 
-      // Create the client object
+      // Create the Member object
       final client = Member(
-        id: '',
+        id: widget.member?.id ?? '',
         firstName: _firstNameController.text,
         lastName: _lastNameController.text,
         email: _emailController.text,
         phoneNumber: _phoneController.text,
-        createdAt: DateTime.now(),
+        createdAt: widget.member?.createdAt ?? DateTime.now(),
         membershipExpiration: _membershipExpiration,
         totalPaid: totalPaid,
-        paymentDates: [],
+        paymentDates: widget.member?.paymentDates ?? [],
         sports: _selectedSports,
-        clientIds: _selectedMemberType == "trainer" ? [] : null,
+        clientIds: _selectedMemberType == "trainer" ? [] : widget.member?.clientIds ?? null,
         notes: _notesController.text,
         memberType: _selectedMemberType,
       );
 
-      // Add the client to Firestore
-      if (_selectedMemberType == "trainer") {
-        // Save client as a trainer
-        await FirebaseFirestore.instance.collection('trainers').add(client.toMap());
-      } else {
-        // Save client as a regular client
-        DocumentReference clientDocRef = await FirebaseFirestore.instance
-            .collection('clients')
-            .add(client.toMap());
-        String newClientId = clientDocRef.id;
+      WriteBatch batch = FirebaseFirestore.instance.batch();
 
-        // Check if a trainer is selected and the sport is NOT "كمال الاجسام" (Bodybuilding)
+      if (widget.member == null) {
+        // Add a new client/member using batched write
+        DocumentReference clientRef = FirebaseFirestore.instance.collection('clients').doc();
+        batch.set(clientRef, client.toMap());
+
+        // Add to trainer if selected
         if (_selectedTrainerId != null) {
-          await _addClientToTrainer(newClientId, _selectedTrainerId!);
+          batch.update(
+            FirebaseFirestore.instance.collection('trainers').doc(_selectedTrainerId),
+            {'clientIds': FieldValue.arrayUnion([clientRef.id])},
+          );
+          // Call the _addClientToTrainer function after the batch update
+          await _addClientToTrainer(clientRef.id, _selectedTrainerId!);
+        }
+      } else {
+        // Edit existing member using batched write
+        DocumentReference clientRef;
+        print('Updating : ${widget.member!.memberType}');
+        if(client.memberType == "trainee") {
+
+           clientRef = FirebaseFirestore.instance.collection('clients').doc(widget.member!.id);
+        } else {
+           clientRef = FirebaseFirestore.instance.collection('trainers').doc(widget.member!.id);
+        }
+
+        // Log the document ID
+        print('Updating client with ID: ${widget.member!.id}');
+
+        // Check if the client document exists before updating
+        DocumentSnapshot clientDoc = await clientRef.get();
+        if (!clientDoc.exists) {
+          _showSnackBar('Client document not found.', Colors.red);
+          print('Client document not found for ID: ${widget.member!.id}'); // Log the issue
+          return;
+        }
+
+        batch.update(clientRef, client.toMap());
+
+        if (_selectedTrainerId != null) {
+          batch.update(
+            FirebaseFirestore.instance.collection('trainers').doc(_selectedTrainerId),
+            {'clientIds': FieldValue.arrayUnion([widget.member!.id])},
+          );
+          // Call the _addClientToTrainer function after the batch update
+          await _addClientToTrainer(widget.member!.id, _selectedTrainerId!);
         }
       }
 
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 8),
-                Text(Localization.membershipTranslations['success']!),
-              ],
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context);
-      }
+      // Commit the batch write
+      await batch.commit();
+
+      _showSnackBar(Localization.membershipTranslations['success']!, Colors.green);
+      Navigator.pop(context);
     } catch (e) {
-      // Handle error and show error message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8),
-                Text('${Localization.membershipTranslations['error']}: ${e.toString()}'),
-              ],
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      _showSnackBar('${Localization.membershipTranslations['error']}: $e', Colors.red);
+      print('Error occurred: $e'); // Log the error for debugging
     } finally {
-      // Reset loading state
       setState(() => _isLoading = false);
     }
+  }
+
+
+  void _showSnackBar(String message, Color backgroundColor) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.info, color: Colors.white),
+            const SizedBox(width: 8),
+            Flexible( // Use Flexible here
+              child: Text(
+                message,
+                style: const TextStyle(color: Colors.white),
+                overflow: TextOverflow.ellipsis, // Optional: Adds ellipsis for overflow
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
 
