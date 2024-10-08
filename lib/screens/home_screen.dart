@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_energy/screens/gym/gym_screen.dart';
 import 'package:gym_energy/screens/members/add_edit_member_screen.dart';
 import 'package:gym_energy/screens/members/list_members_screen.dart';
 import '../widgets/side_bar.dart';
@@ -35,12 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
           showActiveMembers: _showActiveMembers,
         );
       case 1:
-        return _buildCenteredText("شاشة لوحة التحكم");
+        return GymScreen();
       case 2:
-        return _buildCenteredText("شاشة التحصيل");
-      case 3:
-        return _buildCenteredText("شاشة صالة الألعاب الرياضية");
-      case 4:
         return _buildCenteredText("تقرير اليوم");
       default:
         return _buildCenteredText("الشاشة غير موجودة");
@@ -74,7 +71,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return SafeArea(
       child: Scaffold(
-        appBar: AppBar(
+        appBar: _selectedIndex == 1
+            ? AppBar(
+          title: const Text(
+            'معلومات الجيم',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          centerTitle: true,
+          backgroundColor: Theme.of(context).primaryColor,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                // Implement search functionality
+              },
+            ),
+          ],
+        )
+            : AppBar(
           title: Text(
             _selectedIndex == 0 ? 'العملاء' : 'Gym Energy',
             style: const TextStyle(fontFamily: 'Cairo'),
@@ -87,14 +101,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           )
               : null,
-          // Add an IconButton for the "Add Client" action
           actions: _selectedIndex == 0
               ? [
             IconButton(
               icon: const Icon(Icons.add), // Plus icon to indicate adding a new client
               tooltip: 'Add Client',
               onPressed: () {
-                // Action to navigate to Add Client Screen or open a dialog
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => AddEditMemberScreen()),
@@ -162,14 +174,6 @@ class _HomeScreenState extends State<HomeScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.people),
               label: 'الأعضاء',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.analytics),
-              label: 'لوحة التحكم',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet),
-              label: 'التحصيل',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.fitness_center),

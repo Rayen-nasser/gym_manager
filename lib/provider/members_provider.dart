@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gym_energy/model/member.dart' as client_model;
+import 'package:gym_energy/model/sport.dart'; // Assuming you have a Sport model
 
 class MembersProvider with ChangeNotifier {
   List<client_model.Member> _allMembers = [];
   List<client_model.Member> _filteredMembers = [];
+  List<Sport> _sports = [];
 
   String _searchQuery = '';
   String selectedFilter = 'All';
@@ -15,18 +17,29 @@ class MembersProvider with ChangeNotifier {
   // Getter for filtered members
   List<client_model.Member> get filteredMembers => _filteredMembers;
 
-  // Fetch members from Firestore
+  // Getter for sports
+  List<Sport> get availableSports => _sports;
+
+  // Fetch all members (both clients and trainers) from Firestore
   Future<void> fetchMembers() async {
     final clientSnapshot = await FirebaseFirestore.instance.collection('clients').get();
     final trainerSnapshot = await FirebaseFirestore.instance.collection('trainers').get();
 
-    final allDocs = [...clientSnapshot.docs, ...trainerSnapshot.docs];
-
-    _allMembers = allDocs
-        .map((doc) => client_model.Member.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-        .toList();
+    _allMembers = [
+      ...clientSnapshot.docs.map((doc) => client_model.Member.fromMap(doc.data() as Map<String, dynamic>, doc.id)),
+      ...trainerSnapshot.docs.map((doc) => client_model.Member.fromMap(doc.data() as Map<String, dynamic>, doc.id)),
+    ];
 
     _applyFilters();
+    notifyListeners();
+  }
+
+  // Fetch sports from Firestore
+  Future<void> fetchSports() async {
+    final sportsSnapshot = await FirebaseFirestore.instance.collection('sports').get();
+    _sports = sportsSnapshot.docs
+        .map((doc) => Sport.fromMap(doc.data() as Map<String, dynamic>))
+        .toList();
     notifyListeners();
   }
 
@@ -53,19 +66,24 @@ class MembersProvider with ChangeNotifier {
   // Apply the filters to _allMembers and set _filteredMembers
   void _applyFilters() {
     _filteredMembers = _allMembers.where((client) {
+      // Filter by Clients or Trainers
       final matchesFilter = selectedFilter == 'All' ||
           (selectedFilter == 'Clients' && client.memberType == "trainee") ||
           (selectedFilter == 'Trainers' && client.memberType == "trainer");
 
+      // Filter by sport
       final matchesSport = selectedSport == null ||
           client.sports.any((sport) => sport.name == selectedSport);
 
+      // Filter by search query
       final matchesSearch = _searchQuery.isEmpty ||
           client.firstName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           client.lastName.toLowerCase().contains(_searchQuery.toLowerCase());
 
+      // Filter by membership expiration status
       final matchesExpiration = !showExpiredOnly || !client.isExpirationActive;
 
+      // Filter by active status
       final matchesActiveStatus = showActiveMembers ? client.isActive : !client.isActive;
 
       return matchesFilter && matchesSport && matchesSearch && matchesExpiration && matchesActiveStatus;
