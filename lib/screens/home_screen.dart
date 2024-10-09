@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_energy/screens/daily_report/daily_report_screen.dart';
 import 'package:gym_energy/screens/gym/gym_screen.dart';
 import 'package:gym_energy/screens/members/add_edit_member_screen.dart';
 import 'package:gym_energy/screens/members/list_members_screen.dart';
@@ -38,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return GymScreen();
       case 2:
-        return _buildCenteredText("تقرير اليوم");
+        return GymAnalyticsDashboard();
       default:
         return _buildCenteredText("الشاشة غير موجودة");
     }
@@ -79,14 +80,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           centerTitle: true,
           backgroundColor: Theme.of(context).primaryColor,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () {
-                // Implement search functionality
-              },
-            ),
-          ],
         )
             : AppBar(
           title: Text(

@@ -28,7 +28,7 @@ class MemberDetailScreen extends StatelessWidget {
         Member? member;
         try {
           member = provider.filteredMembers.firstWhere(
-                (m) => m.id == memberId,
+            (m) => m.id == memberId,
             orElse: () => throw Exception('Member not found'),
           );
         } catch (e) {
@@ -81,7 +81,8 @@ class MemberDetailScreen extends StatelessWidget {
             centerTitle: true,
             actions: [
               PopupMenuButton<String>(
-                onSelected: (value) => _handleMenuAction(context, value, member!),
+                onSelected: (value) =>
+                    _handleMenuAction(context, value, member!),
                 itemBuilder: (BuildContext context) => [
                   PopupMenuItem<String>(
                     value: 'edit',
@@ -94,7 +95,9 @@ class MemberDetailScreen extends StatelessWidget {
                     value: 'block',
                     child: ListTile(
                       leading: Icon(Icons.block),
-                      title: Text(member!.isActive ? 'حظر العضو' : 'إلغاء حظر العضو', style: GoogleFonts.cairo()),
+                      title: Text(
+                          member!.isActive ? 'حظر العضو' : 'إلغاء حظر العضو',
+                          style: GoogleFonts.cairo()),
                     ),
                   ),
                   PopupMenuItem<String>(
@@ -136,7 +139,6 @@ class MemberDetailScreen extends StatelessWidget {
     );
   }
 
-
   void _handleMenuAction(BuildContext context, String value, Member member) {
     switch (value) {
       case 'edit':
@@ -153,7 +155,8 @@ class MemberDetailScreen extends StatelessWidget {
 
   Future<void> _editMember(BuildContext context, Member member) async {
     final updatedMember = await Navigator.of(context).push<Member>(
-      MaterialPageRoute(builder: (context) => AddEditMemberScreen(member: member)),
+      MaterialPageRoute(
+          builder: (context) => AddEditMemberScreen(member: member)),
     );
 
     if (updatedMember != null) {
@@ -163,7 +166,8 @@ class MemberDetailScreen extends StatelessWidget {
 
   void _blockMember(BuildContext context, Member member) async {
     try {
-      await Provider.of<MembersProvider>(context, listen: false).toggleBlockMember(member);
+      await Provider.of<MembersProvider>(context, listen: false)
+          .toggleBlockMember(member);
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -187,7 +191,8 @@ class MemberDetailScreen extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('تأكيد الحذف', style: GoogleFonts.cairo()),
-          content: Text('هل أنت متأكد من رغبتك في حذف هذا العضو؟', style: GoogleFonts.cairo()),
+          content: Text('هل أنت متأكد من رغبتك في حذف هذا العضو؟',
+              style: GoogleFonts.cairo()),
           actions: [
             TextButton(
               child: Text('إلغاء', style: GoogleFonts.cairo()),
@@ -198,14 +203,17 @@ class MemberDetailScreen extends StatelessWidget {
               onPressed: () async {
                 Navigator.of(context).pop();
                 try {
-                  await Provider.of<MembersProvider>(context, listen: false).deleteMember(client);
+                  await Provider.of<MembersProvider>(context, listen: false)
+                      .deleteMember(client);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('تم حذف العضو: ${client.fullName}')),
                   );
                   Navigator.of(context).pop(); // Close the ClientDetailScreen
                 } catch (error) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('حدث خطأ أثناء حذف العضو: ${client.fullName}')),
+                    SnackBar(
+                        content: Text(
+                            'حدث خطأ أثناء حذف العضو: ${client.fullName}')),
                   );
                 }
               },
@@ -216,7 +224,8 @@ class MemberDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildClientHeader(BuildContext context, bool isMembershipExpired, Member member) {
+  Widget _buildClientHeader(
+      BuildContext context, bool isMembershipExpired, Member member) {
     return Row(
       children: [
         CircleAvatar(
@@ -234,7 +243,8 @@ class MemberDetailScreen extends StatelessWidget {
             children: [
               Text(
                 member.fullName,
-                style: GoogleFonts.cairo(fontSize: 24, fontWeight: FontWeight.bold),
+                style: GoogleFonts.cairo(
+                    fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
               _buildMembershipStatus(isMembershipExpired),
@@ -272,18 +282,23 @@ class MemberDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('معلومات الاتصال', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('معلومات الاتصال',
+                style: GoogleFonts.cairo(
+                    fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            _buildInfoRow(Icons.email, 'البريد الإلكتروني:', member.email, context),
+            _buildInfoRow(
+                Icons.email, 'البريد الإلكتروني:', member.email, context),
             const SizedBox(height: 8),
-            _buildInfoRow(Icons.phone, 'رقم الهاتف:', member.phoneNumber, context),
+            _buildInfoRow(
+                Icons.phone, 'رقم الهاتف:', member.phoneNumber, context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFinancialInfo(BuildContext context, bool isTablet, Member member) {
+  Widget _buildFinancialInfo(
+      BuildContext context, bool isTablet, Member member) {
     return Card(
       elevation: 4,
       child: Padding(
@@ -291,21 +306,26 @@ class MemberDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('المعلومات المالية', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('المعلومات المالية',
+                style: GoogleFonts.cairo(
+                    fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             _buildTotalPaid(context, isTablet, member),
             const SizedBox(height: 8),
             Text(
               'تواريخ الدفع:',
-              style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold),
+              style:
+                  GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: member.paymentDates.map((date) => Text(
-                DateFormat('yyyy-MM-dd').format(date),
-                style: GoogleFonts.cairo(fontSize: 14),
-              )).toList(),
+              children: member.paymentDates
+                  .map((date) => Text(
+                        DateFormat('yyyy-MM-dd').format(date),
+                        style: GoogleFonts.cairo(fontSize: 14),
+                      ))
+                  .toList(),
             ),
           ],
         ),
@@ -313,7 +333,8 @@ class MemberDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTotalPaid(BuildContext context, bool isTablet, Member member) { // Add isTablet parameter
+  Widget _buildTotalPaid(BuildContext context, bool isTablet, Member member) {
+    // Add isTablet parameter
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -355,10 +376,14 @@ class MemberDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('الرياضات المسجلة', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('الرياضات المسجلة',
+                style: GoogleFonts.cairo(
+                    fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Column(
-              children: member.sports.map((sport) => _buildSportItem(sport, context)).toList(),
+              children: member.sports
+                  .map((sport) => _buildSportItem(sport, context))
+                  .toList(),
             ),
           ],
         ),
@@ -369,7 +394,8 @@ class MemberDetailScreen extends StatelessWidget {
   Widget _buildSportItem(Sport sport, BuildContext context) {
     return ListTile(
       title: Text(sport.name, style: GoogleFonts.cairo(fontSize: 16)),
-      subtitle: Text('السعر: ${sport.price.toStringAsFixed(2)} دينار', style: GoogleFonts.cairo(fontSize: 14)),
+      subtitle: Text('السعر: ${sport.price.toStringAsFixed(2)} دينار',
+          style: GoogleFonts.cairo(fontSize: 14)),
       leading: Icon(Icons.sports, color: Theme.of(context).primaryColor),
     );
   }
@@ -382,56 +408,72 @@ class MemberDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('معلومات إضافية', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('معلومات إضافية',
+                style: GoogleFonts.cairo(
+                    fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            _buildInfoRow(Icons.calendar_today, 'تاريخ الإنشاء:', DateFormat('yyyy-MM-dd').format(member.createdAt), context),
+            _buildInfoRow(Icons.calendar_today, 'تاريخ الإنشاء:',
+                DateFormat('yyyy-MM-dd').format(member.createdAt), context),
             if (member.assignedTrainerId != null) ...[
               const SizedBox(height: 8),
               FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance.collection('trainers').doc(member.assignedTrainerId).get(),
+                future: FirebaseFirestore.instance
+                    .collection('trainers')
+                    .doc(member.assignedTrainerId)
+                    .get(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return CircularProgressIndicator();
                   }
                   if (snapshot.hasError) {
-                    return Text('خطأ في تحميل بيانات المدرب', style: GoogleFonts.cairo(color: Colors.red));
+                    return Text('خطأ في تحميل بيانات المدرب',
+                        style: GoogleFonts.cairo(color: Colors.red));
                   }
                   if (snapshot.hasData && snapshot.data!.exists) {
-                    final trainerData = snapshot.data!.data() as Map<String, dynamic>;
-                    final trainerName = '${trainerData['firstName']} ${trainerData['lastName']}';
+                    final trainerData =
+                        snapshot.data!.data() as Map<String, dynamic>;
+                    final trainerName =
+                        '${trainerData['firstName']} ${trainerData['lastName']}';
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildInfoRow(Icons.person, 'المدرب المعين:', trainerName, context),
+                        _buildInfoRow(Icons.person, 'المدرب المعين:',
+                            trainerName, context),
                         const SizedBox(height: 4),
-                        _buildInfoRow(Icons.email, 'بريد المدرب:', trainerData['email'], context),
+                        _buildInfoRow(Icons.email, 'بريد المدرب:',
+                            trainerData['email'], context),
                         const SizedBox(height: 4),
-                        _buildInfoRow(Icons.phone, 'هاتف المدرب:', trainerData['phoneNumber'], context),
+                        _buildInfoRow(Icons.phone, 'هاتف المدرب:',
+                            trainerData['phoneNumber'], context),
                       ],
                     );
                   } else {
-                    return Text('لم يتم العثور على بيانات المدرب', style: GoogleFonts.cairo(color: Colors.orange));
+                    return Text('لم يتم العثور على بيانات المدرب',
+                        style: GoogleFonts.cairo(color: Colors.orange));
                   }
                 },
               ),
             ],
             if (member.clientIds != null && member.clientIds!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              _buildInfoRow(Icons.group, 'عدد العملاء:', member.clientIds!.length.toString(), context),
+              _buildInfoRow(Icons.group, 'عدد العملاء:',
+                  member.clientIds!.length.toString(), context),
               const SizedBox(height: 8),
-              Text('الرياضات التي يدربها:', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text('الرياضات التي يدربها:',
+                  style: GoogleFonts.cairo(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: member.sports.map((sport) =>
-                    Padding(
-                      padding: const EdgeInsets.only(left: 16, top: 4),
-                      child: Text(
-                        '• ${sport.name}',
-                        style: GoogleFonts.cairo(fontSize: 14),
-                      ),
-                    )
-                ).toList(),
+                children: member.sports
+                    .map((sport) => Padding(
+                          padding: const EdgeInsets.only(left: 16, top: 4),
+                          child: Text(
+                            '• ${sport.name}',
+                            style: GoogleFonts.cairo(fontSize: 14),
+                          ),
+                        ))
+                    .toList(),
               ),
             ],
             if (member.notes != null && member.notes!.isNotEmpty) ...[
@@ -444,8 +486,10 @@ class MemberDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMembershipInfo(BuildContext context, bool isExpired, Member member) {
-    final expirationDate = DateFormat('yyyy-MM-dd').format(member.membershipExpiration);
+  Widget _buildMembershipInfo(
+      BuildContext context, bool isExpired, Member member) {
+    final expirationDate =
+        DateFormat('yyyy-MM-dd').format(member.membershipExpiration);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -477,7 +521,8 @@ class MemberDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, bool isExpired, Member member) {
+  Widget _buildActionButtons(
+      BuildContext context, bool isExpired, Member member) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -505,8 +550,10 @@ class MemberDetailScreen extends StatelessWidget {
             label: 'تجديد',
             onPressed: isExpired
                 ? () => _renewMembership(context, member)
-                : () => _showMembershipActiveMessage(context),
-            color: Colors.orange,
+                : null, // Disable the button if membership is active
+            color: isExpired
+                ? Colors.orange
+                : Colors.grey, // Change color if disabled
           ),
         ],
       ),
@@ -517,14 +564,15 @@ class MemberDetailScreen extends StatelessWidget {
     required BuildContext context,
     required IconData icon,
     required String label,
-    required VoidCallback onPressed,
+    required VoidCallback? onPressed,
     required Color color,
   }) {
     return ElevatedButton.icon(
       icon: Icon(icon, color: Colors.white, size: 18),
       label: Text(
         label,
-        style: const TextStyle(color: Colors.white, fontFamily: 'Cairo', fontSize: 12),
+        style: const TextStyle(
+            color: Colors.white, fontFamily: 'Cairo', fontSize: 12),
       ),
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
@@ -535,8 +583,8 @@ class MemberDetailScreen extends StatelessWidget {
     );
   }
 
-
-  Widget _buildInfoRow(IconData icon, String label, String value, BuildContext context) {
+  Widget _buildInfoRow(
+      IconData icon, String label, String value, BuildContext context) {
     return Row(
       children: [
         Icon(icon, size: 20, color: Colors.grey[600]),
@@ -559,12 +607,15 @@ class MemberDetailScreen extends StatelessWidget {
                   text: value,
                   style: GoogleFonts.cairo(
                     fontSize: 16,
-                    color: Theme.of(context).colorScheme.onBackground, // Using onBackground from theme
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onBackground, // Using onBackground from theme
                   ),
                 ),
               ],
             ),
-            overflow: TextOverflow.ellipsis, // Ensures the text doesn't overflow
+            overflow:
+                TextOverflow.ellipsis, // Ensures the text doesn't overflow
           ),
         ),
       ],
@@ -618,22 +669,26 @@ class MemberDetailScreen extends StatelessWidget {
 
     try {
       // Update Firestore
-      await FirebaseFirestore.instance.collection('clients').doc(member.id).update({
+      await FirebaseFirestore.instance
+          .collection('clients')
+          .doc(member.id)
+          .update({
         'membershipExpiration': Timestamp.fromDate(newExpirationDate),
-        'paymentDates': FieldValue.arrayUnion([Timestamp.fromDate(DateTime.now())]),
+        'paymentDates':
+            FieldValue.arrayUnion([Timestamp.fromDate(DateTime.now())]),
         'totalPaid': FieldValue.increment(renewalFee),
       });
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تم تجديد العضوية حتى ${newExpirationDate.toLocal().toString().split(' ')[0]}')),
+        SnackBar(
+            content: Text(
+                'تم تجديد العضوية حتى ${newExpirationDate.toLocal().toString().split(' ')[0]}')),
       );
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('فشل تجديد العضوية: $e')),
       );
     }
   }
-
 }
