@@ -139,28 +139,6 @@ class Member {
     );
   }
 
-  // Add a client (for trainers only)
-  Member? addClient(String clientId) {
-    List<String> updatedClientIds = List.from(clientIds ?? [])..add(clientId);
-    return Member(
-      id: id,
-      firstName: firstName,
-      lastName: lastName,
-      email: email,
-      phoneNumber: phoneNumber,
-      createdAt: createdAt,
-      membershipExpiration: membershipExpiration,
-      totalPaid: totalPaid,
-      paymentDates: paymentDates,
-      sports: sports,
-      assignedTrainerId: assignedTrainerId,
-      clientIds: updatedClientIds,
-      notes: notes,
-      memberType: memberType,
-      isActive: isActive,
-    );
-  }
-
   // Method to calculate the total price of all enrolled sports
   double totalSportPrices() {
     return sports.fold(0.0, (sum, sport) => sum + sport.price);
@@ -202,5 +180,25 @@ class Member {
       notes: notes ?? this.notes,
       memberType: memberType ?? this.memberType, // Update memberType
     );
+  }
+
+  // New method to calculate revenue for a specific month
+  double calculateRevenueForMonth(DateTime month) {
+    return paymentDates
+        .where((date) =>
+    date.year == month.year && date.month == month.month)
+        .fold(0.0, (sum, date) {
+      int paymentIndex = paymentDates.indexOf(date);
+      if (paymentIndex < paymentDates.length - 1) {
+        return sum + (totalPaid / paymentDates.length);
+      } else {
+        return sum + (totalPaid - (totalPaid / paymentDates.length) * (paymentDates.length - 1));
+      }
+    });
+  }
+
+  // Static method to calculate total revenue for a list of members in a specific month
+  static double calculateTotalRevenueForMonth(List<Member> members, DateTime month) {
+    return members.fold(0.0, (sum, member) => sum + member.calculateRevenueForMonth(month));
   }
 }

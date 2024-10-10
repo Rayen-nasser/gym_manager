@@ -4,7 +4,6 @@ import 'package:gym_energy/screens/gym/gym_screen.dart';
 import 'package:gym_energy/screens/members/add_edit_member_screen.dart';
 import 'package:gym_energy/screens/members/list_members_screen.dart';
 import '../widgets/side_bar.dart';
-import '../localization.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function() onThemeChanged;
@@ -26,6 +25,20 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _selectedSport;
   bool _showExpiredOnly = false;
   bool _showActiveMembers = true;
+
+  // Method to dynamically change the AppBar title
+  String get _appTitle {
+    switch (_selectedIndex) {
+      case 0:
+        return 'الأعضاء';
+      case 1:
+        return 'معلومات الجيم';
+      case 2:
+        return 'تحليلات النادي الرياضي';
+      default:
+        return 'Gym Energy';
+    }
+  }
 
   Widget _getScreen(int index) {
     switch (index) {
@@ -49,10 +62,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return Center(
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: 'Cairo',
           fontSize: 20,
           fontWeight: FontWeight.w700,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
         ),
       ),
     );
@@ -64,6 +78,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // Method to load data (e.g., refresh action in the AppBar)
+  void _loadData() {
+    // Add your logic for refreshing data
+    print('Refreshing data...');
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -72,39 +92,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return SafeArea(
       child: Scaffold(
-        appBar: _selectedIndex == 1
-            ? AppBar(
-          title: const Text(
-            'معلومات الجيم',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-          backgroundColor: Theme.of(context).primaryColor,
-        )
-            : AppBar(
+        appBar: AppBar(
           title: Text(
-            _selectedIndex == 0 ? 'العملاء' : 'Gym Energy',
-            style: const TextStyle(fontFamily: 'Cairo'),
-          ),
-          leading: _selectedIndex == 0
-              ? Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => Scaffold.of(context).openDrawer(),
+            _appTitle,
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontWeight: FontWeight.bold,
+              color: theme.appBarTheme.foregroundColor ?? theme.colorScheme.onPrimary,
             ),
-          )
-              : null,
+          ),
+          backgroundColor: theme.appBarTheme.backgroundColor ?? theme.primaryColor,
+          elevation: 0,
           actions: _selectedIndex == 0
               ? [
             IconButton(
-              icon: const Icon(Icons.add), // Plus icon to indicate adding a new client
-              tooltip: 'Add Client',
+              icon: const Icon(Icons.add),
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => AddEditMemberScreen()),
                 );
               },
+              tooltip: 'Add Client',
+              color: theme.colorScheme.secondary,
             ),
           ]
               : [],
@@ -150,15 +160,16 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          backgroundColor: theme.primaryColor,
+          backgroundColor: theme.colorScheme.primary,
           selectedItemColor: theme.colorScheme.secondary,
           unselectedItemColor: Colors.white,
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
           iconSize: isTablet ? 36 : 24,
-          selectedLabelStyle: const TextStyle(
+          selectedLabelStyle: TextStyle(
             fontFamily: 'Cairo',
             fontWeight: FontWeight.w700,
+            color: theme.colorScheme.secondary,
           ),
           unselectedLabelStyle: const TextStyle(
             fontFamily: 'Cairo',
