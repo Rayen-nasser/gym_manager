@@ -33,9 +33,10 @@ class GymMonthlyFinancialOverview extends StatelessWidget {
               children: [
                 Text(
                   'الملخص المالي الشهري للنادي',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontFamily: 'Cairo',
+                  style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    fontFamily: 'Cairo',
                   ),
                 ),
                 SizedBox(height: isTablet ? 24 : 16),

@@ -56,8 +56,6 @@ class MetricsCardsWidget extends StatelessWidget {
           const SizedBox(height: 10),
           _buildMembershipAnalysis(formatter, joinedMembers, nonRenewedMembers, renewedMembers, averageRevenuePerMember),
           const SizedBox(height: 20),
-          _buildSectionTitle('تحليل الإيرادات'),
-          const SizedBox(height: 10),
           _buildRevenueChart(revenueHistory),
         ],
       ),
@@ -151,7 +149,7 @@ class MetricsCardsWidget extends StatelessWidget {
 
   Widget _buildRevenueChart(List<double> revenueHistory) {
     return Container(
-      height: 200,
+      height: 250, // Increased height for the card
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -165,63 +163,80 @@ class MetricsCardsWidget extends StatelessWidget {
           ),
         ],
       ),
-      child: LineChart(
-        LineChartData(
-          gridData: FlGridData(show: false),
-          titlesData: FlTitlesData(
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 22,
-                getTitlesWidget: (value, meta) {
-                  final now = DateTime.now();
-                  final adjustedMonth = now.subtract(Duration(days: (revenueHistory.length - 1 - value.toInt()) * 30));
-                  return Text(
-                    DateFormat('MMM').format(adjustedMonth),
-                    style: const TextStyle(
-                      color: Color(0xff68737d),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  );
-                },
-                interval: 1, // Ensure x-axis ticks are properly spaced
-              ),
-            ),
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            topTitles: AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            rightTitles: AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title inside the card
+          Text(
+            'تحليل الإيرادات',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
           ),
-          borderData: FlBorderData(show: false),
-          minX: 0,
-          maxX: revenueHistory.length.toDouble() - 1,
-          minY: 0,
-          maxY: revenueHistory.isNotEmpty
-              ? revenueHistory.reduce((a, b) => a > b ? a : b) * 1.2
-              : 1.0,
-          lineBarsData: [
-            LineChartBarData(
-              spots: revenueHistory.asMap().entries.map((entry) {
-                return FlSpot(entry.key.toDouble(), entry.value);
-              }).toList(),
-              isCurved: true,
-              color: const Color(0xFF43A047),
-              barWidth: 3,
-              isStrokeCapRound: true,
-              dotData: FlDotData(show: false),
-              belowBarData: BarAreaData(
-                show: true,
-                color: const Color(0xFF43A047).withOpacity(0.2),
+          const SizedBox(height: 10), // Space between title and chart
+          Expanded(
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(show: false),
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 22,
+                      getTitlesWidget: (value, meta) {
+                        final now = DateTime.now();
+                        final adjustedMonth = now.subtract(Duration(days: (revenueHistory.length - 1 - value.toInt()) * 30));
+                        return Text(
+                          DateFormat('MMM').format(adjustedMonth),
+                          style: const TextStyle(
+                            color: Color(0xff68737d),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        );
+                      },
+                      interval: 1, // Ensure x-axis ticks are properly spaced
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                minX: 0,
+                maxX: revenueHistory.length.toDouble() - 1,
+                minY: 0,
+                maxY: revenueHistory.isNotEmpty
+                    ? revenueHistory.reduce((a, b) => a > b ? a : b) * 1.2
+                    : 1.0,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: revenueHistory.asMap().entries.map((entry) {
+                      return FlSpot(entry.key.toDouble(), entry.value);
+                    }).toList(),
+                    isCurved: true,
+                    color: const Color(0xFF43A047),
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: const Color(0xFF43A047).withOpacity(0.2),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
