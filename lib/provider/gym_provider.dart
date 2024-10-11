@@ -95,6 +95,4 @@ class GymProvider with ChangeNotifier {
     return distribution;
   }
 
-
-
 }

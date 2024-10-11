@@ -164,4 +164,46 @@ class MembersProvider with ChangeNotifier {
       return null; // Return null in case of an error
     }
   }
+
+
+  // New method for renewing membership
+  Future<Member> renewMembership(Member member) async {
+    try {
+      DateTime newExpirationDate = DateTime.now().add(Duration(days: 30));
+      double renewalFee = member.totalSportPrices();
+
+      // Update Firestore
+      await FirebaseFirestore.instance
+          .collection('${member.memberType}s')
+          .doc(member.id)
+          .update({
+        'membershipExpiration': Timestamp.fromDate(newExpirationDate),
+        'paymentDates': FieldValue.arrayUnion([Timestamp.fromDate(DateTime.now())]),
+        'totalPaid': renewalFee,
+      });
+
+      // Update local data
+      int index = _allMembers.indexWhere((m) => m.id == member.id);
+      if (index != -1) {
+        // Create an updated member object
+        Member updatedMember = _allMembers[index].copyWith(
+          membershipExpiration: newExpirationDate,
+          paymentDates: [..._allMembers[index].paymentDates, DateTime.now()],
+          totalPaid: renewalFee,
+        );
+        _allMembers[index] = updatedMember; // Update the local list
+        _applyFilters(); // Refresh filtered members
+        notifyListeners(); // Notify listeners
+        return updatedMember; // Return updated member
+      }
+
+      throw Exception('Member not found');
+    } catch (e) {
+      print("Error renewing membership: $e");
+      throw e;
+    }
+  }
+
+
+
 }

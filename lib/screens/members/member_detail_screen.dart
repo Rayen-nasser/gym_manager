@@ -1,3 +1,4 @@
+import 'package:another_flushbar/flushbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,7 +10,7 @@ import '../../model/member.dart';
 import '../../model/sport.dart';
 import '../../provider/members_provider.dart';
 
-class MemberDetailScreen extends StatelessWidget {
+class MemberDetailScreen extends StatefulWidget {
   final String memberId;
 
   const MemberDetailScreen({
@@ -18,6 +19,11 @@ class MemberDetailScreen extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<MemberDetailScreen> createState() => _MemberDetailScreenState();
+}
+
+class _MemberDetailScreenState extends State<MemberDetailScreen> {
+  @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth > 600;
@@ -25,10 +31,10 @@ class MemberDetailScreen extends StatelessWidget {
     return Consumer<MembersProvider>(
       builder: (context, provider, child) {
         // Find the member in all members first, not just filtered
-        Member? member;
+        late Member? member;
         try {
           member = provider.filteredMembers.firstWhere(
-            (m) => m.id == memberId,
+            (m) => m.id == widget.memberId,
             orElse: () => throw Exception('Member not found'),
           );
         } catch (e) {
@@ -129,7 +135,7 @@ class MemberDetailScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   _buildAdditionalInfo(context, member),
                   const SizedBox(height: 24),
-                  _buildActionButtons(context, isExpired, member),
+                  _buildActionButtons(context, isExpired, member, provider),
                 ],
               ),
             ),
@@ -168,20 +174,53 @@ class MemberDetailScreen extends StatelessWidget {
     try {
       await Provider.of<MembersProvider>(context, listen: false)
           .toggleBlockMember(member);
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(member.isActive
+      Navigator.of(context).pop(); // Close any dialog if open
+
+      Flushbar(
+        title: member.isActive ? 'نجاح الحظر' : 'نجاح إلغاء الحظر',
+        message: member.isActive
+            ? 'تم حظر العضو: ${member.fullName}'
+            : 'تم إلغاء حظر العضو: ${member.fullName}',
+        flushbarStyle: FlushbarStyle.GROUNDED,
+        backgroundColor: member.isActive ? Colors.red : Colors.green,
+        duration: Duration(seconds: 3),
+        titleText: Text(
+          member.isActive ? 'نجاح الحظر' : 'نجاح إلغاء الحظر',
+          style: GoogleFonts.cairo(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        messageText: Text(
+          member.isActive
               ? 'تم حظر العضو: ${member.fullName}'
-              : 'تم إلغاء حظر العضو: ${member.fullName}'),
+              : 'تم إلغاء حظر العضو: ${member.fullName}',
+          style: GoogleFonts.cairo(
+            color: Colors.white,
+          ),
         ),
-      );
+      ).show(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('حدث خطأ أثناء حظر/إلغاء حظر العضو: $e'),
+      Flushbar(
+        title: 'خطأ',
+        message: 'حدث خطأ أثناء حظر/إلغاء حظر العضو: $e',
+        flushbarStyle: FlushbarStyle.GROUNDED,
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 3),
+        titleText: Text(
+          'خطأ',
+          style: GoogleFonts.cairo(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      );
+        messageText: Text(
+          'حدث خطأ أثناء حظر/إلغاء حظر العضو: $e',
+          style: GoogleFonts.cairo(
+            color: Colors.white,
+          ),
+        ),
+      ).show(context);
     }
   }
 
@@ -191,8 +230,10 @@ class MemberDetailScreen extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('تأكيد الحذف', style: GoogleFonts.cairo()),
-          content: Text('هل أنت متأكد من رغبتك في حذف هذا العضو؟',
-              style: GoogleFonts.cairo()),
+          content: Text(
+            'هل أنت متأكد من رغبتك في حذف هذا العضو؟',
+            style: GoogleFonts.cairo(),
+          ),
           actions: [
             TextButton(
               child: Text('إلغاء', style: GoogleFonts.cairo()),
@@ -201,20 +242,54 @@ class MemberDetailScreen extends StatelessWidget {
             TextButton(
               child: Text('حذف', style: GoogleFonts.cairo()),
               onPressed: () async {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Close the dialog
                 try {
                   await Provider.of<MembersProvider>(context, listen: false)
                       .deleteMember(client);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('تم حذف العضو: ${client.fullName}')),
-                  );
-                  Navigator.of(context).pop(); // Close the ClientDetailScreen
+
+                  Flushbar(
+                    title: 'نجاح الحذف',
+                    message: 'تم حذف العضو: ${client.fullName}',
+                    flushbarStyle: FlushbarStyle.GROUNDED,
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 3),
+                    titleText: Text(
+                      'نجاح الحذف',
+                      style: GoogleFonts.cairo(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    messageText: Text(
+                      'تم حذف العضو: ${client.fullName}',
+                      style: GoogleFonts.cairo(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ).show(context);
+
+                  Navigator.of(context).pop(); // Close the ClientDetailScreen if needed
                 } catch (error) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            'حدث خطأ أثناء حذف العضو: ${client.fullName}')),
-                  );
+                  Flushbar(
+                    title: 'خطأ',
+                    message: 'حدث خطأ أثناء حذف العضو: ${client.fullName}',
+                    flushbarStyle: FlushbarStyle.GROUNDED,
+                    backgroundColor: Colors.red,
+                    duration: Duration(seconds: 3),
+                    titleText: Text(
+                      'خطأ',
+                      style: GoogleFonts.cairo(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    messageText: Text(
+                      'حدث خطأ أثناء حذف العضو: ${client.fullName}',
+                      style: GoogleFonts.cairo(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ).show(context);
                 }
               },
             ),
@@ -522,7 +597,7 @@ class MemberDetailScreen extends StatelessWidget {
   }
 
   Widget _buildActionButtons(
-      BuildContext context, bool isExpired, Member member) {
+      BuildContext context, bool isExpired, Member member, MembersProvider provider) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -549,7 +624,7 @@ class MemberDetailScreen extends StatelessWidget {
             icon: Icons.refresh,
             label: 'تجديد',
             onPressed: isExpired
-                ? () => _renewMembership(context, member)
+                ? () => _renewMembership(context, member,provider)
                 : null, // Disable the button if membership is active
             color: isExpired
                 ? Colors.orange
@@ -622,12 +697,6 @@ class MemberDetailScreen extends StatelessWidget {
     );
   }
 
-  void _showMembershipActiveMessage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('العضوية لا تزال فعالة!')),
-    );
-  }
-
   void _launchEmail(BuildContext context, String email) async {
     final Uri emailUri = Uri(
       scheme: 'mailto',
@@ -663,37 +732,57 @@ class MemberDetailScreen extends StatelessWidget {
     }
   }
 
-  void _renewMembership(BuildContext context, Member member) async {
-    DateTime newExpirationDate = DateTime.now().add(Duration(days: 30));
-    double renewalFee = member.totalSportPrices();
-
+  void _renewMembership(BuildContext context, Member member, MembersProvider provider) async {
     try {
-      // Update Firestore
-      await FirebaseFirestore.instance
-          .collection('clients')
-          .doc(member.id)
-          .update({
-        'membershipExpiration': Timestamp.fromDate(newExpirationDate),
-        'paymentDates':
-        FieldValue.arrayUnion([Timestamp.fromDate(DateTime.now())]),
-        'totalPaid': FieldValue.increment(renewalFee),
+      Member updatedMember = await provider.renewMembership(member);
+
+      setState(() {
+        member = updatedMember; // Update the member in state
       });
 
-      // Fetch updated data for the specific member
-      MembersProvider gymProvider = Provider.of<MembersProvider>(context, listen: false);
-      await gymProvider.fetchMemberById(member.id, member.memberType); // Fetch only updated member data
-
       // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                'تم تجديد العضوية حتى ${newExpirationDate.toLocal().toString().split(' ')[0]}')),
-      );
+      Flushbar(
+        title: 'نجاح تجديد الاشتراك',
+        message: 'تم تجديد الاشتراك بنجاح.',
+        flushbarStyle: FlushbarStyle.GROUNDED,
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 3),
+        titleText: Text(
+          'نجاح تجديد الاشتراك',
+          style: GoogleFonts.cairo(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        messageText: Text(
+          'تم تجديد الاشتراك بنجاح.',
+          style: GoogleFonts.cairo(
+            color: Colors.white,
+          ),
+        ),
+      ).show(context);
     } catch (e) {
-      // Show failure message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل تجديد العضوية: $e')),
-      );
+      // Show error message
+      Flushbar(
+        title: 'فشل تجديد الاشتراك',
+        message: 'فشل تجديد الاشتراك: $e',
+        flushbarStyle: FlushbarStyle.GROUNDED,
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 3),
+        titleText: Text(
+          'فشل تجديد الاشتراك',
+          style: GoogleFonts.cairo(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        messageText: Text(
+          'فشل تجديد الاشتراك: $e',
+          style: GoogleFonts.cairo(
+            color: Colors.white,
+          ),
+        ),
+      ).show(context);
     }
   }
 
