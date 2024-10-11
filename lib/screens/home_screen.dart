@@ -114,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
               tooltip: 'Add Client',
-              color: theme.colorScheme.secondary,
+              color: Colors.white,
             ),
           ]
               : [],

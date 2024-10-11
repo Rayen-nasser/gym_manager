@@ -3,11 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/member.dart';
 import '../model/sport.dart';
 import '../model/gym.dart';
+
 class GymProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Member> _members = [];
   Map<String, int> _sportsDistribution = {};
-  bool _isLoading = true;  // Starts as true, but should change to false after data is loaded
+  bool _isLoading = true;
 
   List<Member> get members => _members;
   bool get isLoading => _isLoading;
@@ -41,18 +42,16 @@ class GymProvider with ChangeNotifier {
 
   // Load trainers and sports into the staticGymInfo object
   Future<void> loadGymData() async {
-    _isLoading = true; // Set loading to true at the start
+    _isLoading = true;
     notifyListeners();
 
     try {
       // Load trainers and sports
       staticGymInfo.trainers = await fetchTrainers();
       staticGymInfo.sports = await fetchSports();
-
     } catch (e) {
       print("Error loading gym data: $e");
     } finally {
-      // Ensure loading is stopped after the data is fetched or if there is an error
       _isLoading = false;
       notifyListeners();
     }
@@ -60,14 +59,12 @@ class GymProvider with ChangeNotifier {
 
   // Load clients and trainers into _members list
   Future<void> loadData() async {
-    _isLoading = true; // Set loading to true at the start
+    _isLoading = true;
     notifyListeners();
 
     try {
-      final QuerySnapshot clientsSnapshot =
-      await _firestore.collection('clients').get();
-      final QuerySnapshot trainersSnapshot =
-      await _firestore.collection('trainers').get();
+      final QuerySnapshot clientsSnapshot = await _firestore.collection('clients').get();
+      final QuerySnapshot trainersSnapshot = await _firestore.collection('trainers').get();
 
       _members = [
         ...clientsSnapshot.docs.map((doc) =>
@@ -78,13 +75,10 @@ class GymProvider with ChangeNotifier {
 
       // Calculate sports distribution while loading data
       _sportsDistribution = _calculateSportsDistribution(_members);
-
-      // Load gym data (trainers and sports)
       await loadGymData();
     } catch (e) {
       print('Error loading data: $e');
     } finally {
-      // Ensure loading is stopped after data is loaded or if there is an error
       _isLoading = false;
       notifyListeners();
     }
@@ -100,5 +94,7 @@ class GymProvider with ChangeNotifier {
     }
     return distribution;
   }
-}
 
+
+
+}

@@ -24,7 +24,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
 
-  String _selectedMemberType = "trainee";
+  String _selectedMemberType = "client";
   DateTime _membershipExpiration = DateTime.now().add(const Duration(days: 30));
   String? _selectedTrainerId;
   List<Sport> _selectedSports = [];
@@ -191,9 +191,9 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
         SegmentedButton<String>(
           segments: [
             ButtonSegment(
-              value: 'trainee', // Use string value
+              value: 'client', // Use string value
               label: Text(
-                Localization.membershipTranslations['trainee'] ?? 'Trainee',
+                Localization.membershipTranslations['client'] ?? 'Client',
                 style: TextStyle(
                   fontFamily: 'Cairo', // Using Cairo font
                   fontWeight: FontWeight.w700, // Semi-bold style
@@ -318,7 +318,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _selectedMemberType == "trainee"
+          _selectedMemberType == "client"
               ? Localization.membershipTranslations['sports_to_teach']!
               : Localization.membershipTranslations['sports_to_join']!,
           style: TextStyle(
@@ -628,7 +628,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
         }
       } else {
         // Edit existing member using batched write
-        if(member.memberType == "trainee") {
+        if(member.memberType == "client") {
           memberRef = FirebaseFirestore.instance.collection('clients').doc(widget.member!.id);
         } else {
           memberRef = FirebaseFirestore.instance.collection('trainers').doc(widget.member!.id);
@@ -672,7 +672,6 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       setState(() => _isLoading = false);
     }
   }
-
 
   void _showSnackBar(String message, Color backgroundColor) {
     ScaffoldMessenger.of(context).showSnackBar(

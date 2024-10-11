@@ -41,7 +41,7 @@ class MetricsCardsWidget extends StatelessWidget {
     final joinedMembers = members.where((m) => m.createdAt.isAfter(now.subtract(Duration(days: 30)))).length;
 
     // Non-renewed and renewed members calculations
-    final nonRenewedMembers = members.where((m) => !m.isActive && m.membershipExpiration.isBefore(now)).length;
+    final nonRenewedMembers = members.where((m) => m.isActive && m.membershipExpiration.isBefore(now)).length;
     final renewedMembers = members.where((m) => m.isActive && m.membershipExpiration.isAfter(now)).length;
 
     return SingleChildScrollView(

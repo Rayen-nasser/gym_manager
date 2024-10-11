@@ -48,7 +48,7 @@ class _TypeSelectionWidgetState extends State<TypeSelectionWidget> {
             ButtonSegment(
               value: MemberType.personal,
               label: Text(
-                widget.translations['trainee'] ?? 'Trainee',
+                widget.translations['client'] ?? 'Client',
                 style: TextStyle(
                   fontFamily: 'Cairo', // Using Cairo font
                   fontWeight: FontWeight.w400, // Normal weight

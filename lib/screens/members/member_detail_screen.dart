@@ -675,9 +675,13 @@ class MemberDetailScreen extends StatelessWidget {
           .update({
         'membershipExpiration': Timestamp.fromDate(newExpirationDate),
         'paymentDates':
-            FieldValue.arrayUnion([Timestamp.fromDate(DateTime.now())]),
+        FieldValue.arrayUnion([Timestamp.fromDate(DateTime.now())]),
         'totalPaid': FieldValue.increment(renewalFee),
       });
+
+      // Fetch updated data for the specific member
+      MembersProvider gymProvider = Provider.of<MembersProvider>(context, listen: false);
+      await gymProvider.fetchMemberById(member.id, member.memberType); // Fetch only updated member data
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
@@ -686,9 +690,11 @@ class MemberDetailScreen extends StatelessWidget {
                 'تم تجديد العضوية حتى ${newExpirationDate.toLocal().toString().split(' ')[0]}')),
       );
     } catch (e) {
+      // Show failure message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('فشل تجديد العضوية: $e')),
       );
     }
   }
+
 }

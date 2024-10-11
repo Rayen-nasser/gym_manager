@@ -50,7 +50,6 @@ class Member {
 
   factory Member.fromMap(Map<String, dynamic> data, String documentId) {
     final memberType = data['memberType'] ?? 'unknown';
-    print('Creating Member: ID=$documentId, Type=$memberType');
 
     return Member(
       id: documentId,

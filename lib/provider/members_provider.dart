@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gym_energy/model/member.dart' as client_model;
-import 'package:gym_energy/model/sport.dart'; // Assuming you have a Sport model
+import 'package:gym_energy/model/sport.dart';
+
+import '../model/member.dart'; // Assuming you have a Sport model
 
 class MembersProvider with ChangeNotifier {
   List<client_model.Member> _allMembers = [];
@@ -34,15 +36,6 @@ class MembersProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Fetch sports from Firestore
-  Future<void> fetchSports() async {
-    final sportsSnapshot = await FirebaseFirestore.instance.collection('sports').get();
-    _sports = sportsSnapshot.docs
-        .map((doc) => Sport.fromMap(doc.data() as Map<String, dynamic>))
-        .toList();
-    notifyListeners();
-  }
-
   // Update search query and reapply filters
   void updateSearchQuery(String query) {
     _searchQuery = query;
@@ -68,7 +61,7 @@ class MembersProvider with ChangeNotifier {
     _filteredMembers = _allMembers.where((client) {
       // Filter by Clients or Trainers
       final matchesFilter = selectedFilter == 'All' ||
-          (selectedFilter == 'Clients' && client.memberType == "trainee") ||
+          (selectedFilter == 'Clients' && client.memberType == "client") ||
           (selectedFilter == 'Trainers' && client.memberType == "trainer");
 
       // Filter by sport
@@ -133,6 +126,42 @@ class MembersProvider with ChangeNotifier {
         membershipExpiration: updatedExpiration,
       );
       _applyFilters();
+    }
+  }
+
+  // Fetch member data by ID and update the local member list
+  Future<Member?> fetchMemberById(String memberId, String memberType) async {
+    try {
+      final String collection = memberType; // Either 'clients' or 'trainers'
+
+      // Fetch the member's document from Firestore
+      final DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection(collection)
+          .doc(memberId)
+          .get();
+
+      if (doc.exists) {
+        // Map the document data to a Member object
+        final Member updatedMember = Member.fromMap(
+          doc.data() as Map<String, dynamic>,
+          doc.id,
+        );
+
+        // Update the specific member in the _members list
+        int index = _allMembers.indexWhere((m) => m.id == memberId);
+        if (index != -1) {
+          _allMembers[index] = updatedMember;
+          notifyListeners(); // Notify listeners to update UI
+        }
+
+        return updatedMember; // Return the updated member
+      } else {
+        print("Member not found: $memberId");
+        return null; // Return null if the document doesn't exist
+      }
+    } catch (e) {
+      print("Error fetching updated member data: $e");
+      return null; // Return null in case of an error
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:gym_energy/provider/gym_provider.dart';
 import 'package:gym_energy/provider/members_provider.dart';
 import 'package:gym_energy/screens/home_screen.dart';
 import 'package:gym_energy/themes/gym_themes.dart';
@@ -10,11 +11,19 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => MembersProvider()..fetchMembers(), // why we write two dots ".."
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => MembersProvider()..fetchMembers(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => GymProvider()..loadGymData(),
+        ),
+      ],
       child: MyApp(),
     ),
   );
+
 }
 
 class MyApp extends StatefulWidget {

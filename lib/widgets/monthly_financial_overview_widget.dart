@@ -218,7 +218,7 @@ class GymMonthlyFinancialOverview extends StatelessWidget {
     final currentMonth = DateTime.now().month; // Get the current month
     return members.fold(0.0, (sum, member) {
       // Check if the member is active and their expiration month is the current month
-      if (member.isActive && member.isExpirationActive && member.membershipExpiration.month == currentMonth) {
+      if (member.isActive && member.membershipExpiration.month == currentMonth) {
         return sum + member.totalSportPrices(); // Add the member's total sport prices to the sum
       }
       return sum; // Return the current sum if the conditions are not met
