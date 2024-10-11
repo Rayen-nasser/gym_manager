@@ -3,12 +3,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/member.dart';
 import '../model/sport.dart';
 import '../model/gym.dart';
-
 class GymProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Member> _members = [];
   Map<String, int> _sportsDistribution = {};
-  bool _isLoading = true;
+  bool _isLoading = true;  // Starts as true, but should change to false after data is loaded
 
   List<Member> get members => _members;
   bool get isLoading => _isLoading;
@@ -42,14 +41,26 @@ class GymProvider with ChangeNotifier {
 
   // Load trainers and sports into the staticGymInfo object
   Future<void> loadGymData() async {
-    staticGymInfo.trainers = await fetchTrainers();
-    staticGymInfo.sports = await fetchSports();
-    print("Gym trainers and sports data loaded successfully.");
+    _isLoading = true; // Set loading to true at the start
+    notifyListeners();
+
+    try {
+      // Load trainers and sports
+      staticGymInfo.trainers = await fetchTrainers();
+      staticGymInfo.sports = await fetchSports();
+
+    } catch (e) {
+      print("Error loading gym data: $e");
+    } finally {
+      // Ensure loading is stopped after the data is fetched or if there is an error
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   // Load clients and trainers into _members list
   Future<void> loadData() async {
-    _isLoading = true;
+    _isLoading = true; // Set loading to true at the start
     notifyListeners();
 
     try {
@@ -72,10 +83,11 @@ class GymProvider with ChangeNotifier {
       await loadGymData();
     } catch (e) {
       print('Error loading data: $e');
+    } finally {
+      // Ensure loading is stopped after data is loaded or if there is an error
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   // Calculate sports distribution
@@ -89,3 +101,4 @@ class GymProvider with ChangeNotifier {
     return distribution;
   }
 }
+

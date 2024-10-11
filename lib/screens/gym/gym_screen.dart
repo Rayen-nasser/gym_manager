@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../model/gym.dart';
 import '../../model/member.dart';
 import '../../model/sport.dart';
-import '../../services/firestore_service.dart';
+import '../../provider/gym_provider.dart';
 
 class GymScreen extends StatefulWidget {
   const GymScreen({Key? key}) : super(key: key);
@@ -18,46 +19,49 @@ class _GymScreenState extends State<GymScreen> {
   @override
   void initState() {
     super.initState();
-    _loadGymData();
   }
 
-  Future<void> _loadGymData() async {
-    await loadGymData();
-    if (mounted) {  // Ensure the widget is still mounted before calling setState
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        body: isLoading
-            ? Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-          onRefresh: _loadGymData,
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(child: _buildGymInfoSection()),
-              SliverToBoxAdapter(child: _buildTrainersSection()),
-              SliverToBoxAdapter(child: _buildSportsSection()),
-            ],
-          ),
+    return ChangeNotifierProvider(
+      create: (_) {
+        final gymProvider = GymProvider();
+        gymProvider.loadGymData(); // Load data after the provider is created
+        return gymProvider;
+      },
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Scaffold(
+          body: Consumer<GymProvider>(builder: (context, gymProvider, child) {
+            if (gymProvider.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            return RefreshIndicator(
+              onRefresh: () => gymProvider.loadGymData(),
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: _buildGymInfoSection()),
+                  SliverToBoxAdapter(child: _buildTrainersSection()),
+                  SliverToBoxAdapter(child: _buildSportsSection()),
+                ],
+              ),
+            );
+          }),
         ),
       ),
     );
   }
 
+
   Widget _buildGymInfoSection() {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 16),
+      margin: const EdgeInsets.symmetric(vertical: 16),
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -69,7 +73,7 @@ class _GymScreenState extends State<GymScreen> {
                 color: Theme.of(context).primaryColor,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             _buildInfoRow(Icons.fitness_center, 'اسم الجيم', staticGymInfo.name),
             _buildInfoRow(Icons.location_on, 'العنوان', staticGymInfo.address),
             _buildInfoRow(Icons.access_time, 'وقت الفتح', staticGymInfo.openingTime),
@@ -85,28 +89,28 @@ class _GymScreenState extends State<GymScreen> {
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: Theme.of(context).primaryColor, size: 24),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                     fontFamily: 'Cairo',
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   value,
-                  style: TextStyle(fontSize: 14, fontFamily: 'Cairo'),
+                  style: const TextStyle(fontSize: 14, fontFamily: 'Cairo'),
                 ),
               ],
             ),
@@ -118,11 +122,11 @@ class _GymScreenState extends State<GymScreen> {
 
   Widget _buildTrainersSection() {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 16),
+      margin: const EdgeInsets.symmetric(vertical: 16),
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -134,7 +138,7 @@ class _GymScreenState extends State<GymScreen> {
                 color: Theme.of(context).primaryColor,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             _buildTrainersBySport(),
           ],
         ),
@@ -172,64 +176,53 @@ class _GymScreenState extends State<GymScreen> {
             color: Theme.of(context).primaryColor,
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         trainers.isNotEmpty
             ? ListView.builder(
           shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           itemCount: trainers.length,
           itemBuilder: (context, index) => _buildTrainerTile(trainers[index]),
         )
-            : Text(
+            : const Text(
           'لا يوجد مدربون متاحون.',
           style: TextStyle(fontStyle: FontStyle.italic, fontFamily: 'Cairo'),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
       ],
     );
   }
 
   Widget _buildTrainerTile(Member trainer) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
           child: Icon(Icons.person, color: Theme.of(context).primaryColor),
         ),
         title: Text(
           trainer.fullName,
-          style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
         ),
         subtitle: Text(
           'البريد الإلكتروني: ${trainer.email}',
-          style: TextStyle(fontFamily: 'Cairo'),
+          style: const TextStyle(fontFamily: 'Cairo'),
         ),
-        // trailing: ElevatedButton.icon(
-        //   icon: Icon(Icons.bookmark),
-        //   label: Text('حجز', style: TextStyle(fontFamily: 'Cairo')),
-        //   onPressed: () {
-        //     // Implement booking functionality
-        //   },
-        //   style: ElevatedButton.styleFrom(
-        //     backgroundColor: Theme.of(context).primaryColor,
-        //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        //   ),
-        // ),
       ),
     );
   }
 
   Widget _buildSportsSection() {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 16),
+      margin: const EdgeInsets.symmetric(vertical: 16),
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -241,15 +234,15 @@ class _GymScreenState extends State<GymScreen> {
                 color: Theme.of(context).primaryColor,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             staticGymInfo.sports.isNotEmpty
                 ? ListView.builder(
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: staticGymInfo.sports.length,
               itemBuilder: (context, index) => _buildSportTile(staticGymInfo.sports[index]),
             )
-                : Text(
+                : const Text(
               'لا توجد رياضات متاحة.',
               style: TextStyle(fontStyle: FontStyle.italic, fontFamily: 'Cairo'),
             ),
@@ -262,41 +255,43 @@ class _GymScreenState extends State<GymScreen> {
   Widget _buildSportTile(Sport sport) {
     return Card(
       elevation: 2,
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
           child: Icon(Icons.sports, color: Theme.of(context).primaryColor),
         ),
         title: Text(
           sport.name,
-          style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
         ),
         subtitle: Text(
           'السعر: \$${sport.price.toStringAsFixed(2)}',
-          style: TextStyle(fontFamily: 'Cairo'),
+          style: const TextStyle(fontFamily: 'Cairo'),
         ),
         trailing: ElevatedButton(
           onPressed: () => _registerForSport(sport),
-          child: Text('سجل', style: TextStyle(fontFamily: 'Cairo')),
+          child: const Text('سجل', style: TextStyle(fontFamily: 'Cairo')),
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).primaryColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
         ),
       ),
     );
   }
 
-  void _registerForSport(Sport sport) {
-    // TODO: Implement registration logic
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('تم التسجيل في رياضة ${sport.name} بنجاح!', style: TextStyle(fontFamily: 'Cairo')),
-        duration: Duration(seconds: 2),
-      ),
-    );
+  Future<void> _registerForSport(Sport sport) async {
+    try {
+      // await FirestoreService.registerForSport(sport);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم التسجيل بنجاح', style: TextStyle(fontFamily: 'Cairo'))),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('حدث خطأ أثناء التسجيل', style: TextStyle(fontFamily: 'Cairo'))),
+      );
+    }
   }
 }
