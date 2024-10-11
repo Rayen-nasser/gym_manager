@@ -74,9 +74,19 @@ class _MembersScreenState extends State<MembersScreen> {
           child: Consumer<MembersProvider>(
             builder: (context, provider, _) {
               final filteredMembers = provider.filteredMembers;
-              return filteredMembers.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : GridView.builder(
+              final isLoading = provider.isLoading;
+
+              if (isLoading) {
+                // Show loading indicator
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (filteredMembers.isEmpty) {
+                return Center(
+                  child: _buildEmptyMessage(provider), // Call to the method that builds the message
+                );
+              }
+              return GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: isTablet ? (isTabletVertical ? 2 : 4) : 1,
                   childAspectRatio: isTablet ? (isTabletVertical ? 1.6 : 1.3) : 4,
@@ -107,6 +117,49 @@ class _MembersScreenState extends State<MembersScreen> {
       ],
     );
   }
+
+// Method to build the empty message based on current filters
+  Widget _buildEmptyMessage(MembersProvider provider) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.info, size: 48, color: Colors.grey),
+        const SizedBox(height: 16),
+        Text(
+          'لا يوجد أعضاء مطابقون للمعايير المحددة',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _getFilterDetails(provider),
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+// Method to generate filter details message
+  String _getFilterDetails(MembersProvider provider) {
+    List<String> details = [];
+
+    if (provider.selectedFilter != 'All') {
+      details.add('نوع العضو: ${provider.selectedFilter}');
+    }
+    if (provider.selectedSport != null) {
+      details.add('الرياضة: ${provider.selectedSport}');
+    }
+    if (provider.showExpiredOnly) {
+      details.add('عرض الأعضاء المنتهية صلاحيتهم فقط');
+    }
+    if (!provider.showActiveMembers) {
+      details.add('عرض الأعضاء غير النشطين');
+    }
+
+    return details.isEmpty ? 'يرجى تعديل المعايير.' : details.join('\n');
+  }
+
 
   Widget _buildSearchBar() {
     return Padding(

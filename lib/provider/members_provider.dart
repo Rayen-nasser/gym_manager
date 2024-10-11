@@ -15,6 +15,10 @@ class MembersProvider with ChangeNotifier {
   String? selectedSport;
   bool showExpiredOnly = false;
   bool showActiveMembers = true;
+  bool _isLoading = false;
+
+  // Getter for loading state
+  bool get isLoading => _isLoading;
 
   // Getter for filtered members
   List<client_model.Member> get filteredMembers => _filteredMembers;
@@ -23,17 +27,25 @@ class MembersProvider with ChangeNotifier {
   List<Sport> get availableSports => _sports;
 
   // Fetch all members (both clients and trainers) from Firestore
+  // Modify fetchMembers to set loading state
   Future<void> fetchMembers() async {
-    final clientSnapshot = await FirebaseFirestore.instance.collection('clients').get();
-    final trainerSnapshot = await FirebaseFirestore.instance.collection('trainers').get();
+    _isLoading = true; // Set loading state to true
+    notifyListeners(); // Notify listeners to update UI
 
-    _allMembers = [
-      ...clientSnapshot.docs.map((doc) => client_model.Member.fromMap(doc.data() as Map<String, dynamic>, doc.id)),
-      ...trainerSnapshot.docs.map((doc) => client_model.Member.fromMap(doc.data() as Map<String, dynamic>, doc.id)),
-    ];
+    try {
+      final clientSnapshot = await FirebaseFirestore.instance.collection('clients').get();
+      final trainerSnapshot = await FirebaseFirestore.instance.collection('trainers').get();
 
-    _applyFilters();
-    notifyListeners();
+      _allMembers = [
+        ...clientSnapshot.docs.map((doc) => client_model.Member.fromMap(doc.data() as Map<String, dynamic>, doc.id)),
+        ...trainerSnapshot.docs.map((doc) => client_model.Member.fromMap(doc.data() as Map<String, dynamic>, doc.id)),
+      ];
+
+      _applyFilters();
+    } finally {
+      _isLoading = false; // Set loading state to false after fetching
+      notifyListeners(); // Notify listeners to update UI
+    }
   }
 
   // Update search query and reapply filters
