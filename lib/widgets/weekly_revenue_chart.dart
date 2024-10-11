@@ -1,35 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart'; // For date formatting
-import 'dart:math'; // For max function
-import 'package:intl/intl.dart' as intl;
-
+import 'package:intl/intl.dart';
+import 'dart:math';
 import '../model/member.dart';
 
 class WeeklyRevenueChart extends StatelessWidget {
-  final List<Member> members; // List of members to calculate revenue
+  final List<Member> members;
 
-  WeeklyRevenueChart(this.members); // Constructor to accept members
+  WeeklyRevenueChart(this.members);
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildWeeklyRevenueChart();
+  }
 
   Widget _buildWeeklyRevenueChart() {
-    // Get current week's start and end dates
     final now = DateTime.now();
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    final endOfWeek = startOfWeek.add(const Duration(days: 6));
 
-    // Create daily revenue data structure
     final List<DailyRevenue> weeklyData = [];
     final arabicDays = [
+      'الأحد',
       'الاثنين',
       'الثلاثاء',
       'الأربعاء',
       'الخميس',
       'الجمعة',
-      'السبت',
-      'الأحد'
+      'السبت'
     ];
 
-    // Initialize data for each day of the week
     for (int i = 0; i < 7; i++) {
       final currentDate = startOfWeek.add(Duration(days: i));
       final dayRevenue = _calculateDailyRevenue(currentDate);
@@ -40,21 +39,22 @@ class WeeklyRevenueChart extends StatelessWidget {
       ));
     }
 
-    // Find maximum revenue for scaling
+    // Find maximum revenue and ensure it's not zero
     final maxRevenue = weeklyData.map((d) => d.revenue).reduce(max);
-    final roundedMax = (maxRevenue / 1000).ceil() * 1000.0;
+    final roundedMax = max((maxRevenue / 1000).ceil() * 1000.0, 1000.0); // Ensure minimum of 1000
+    final horizontalInterval = max(roundedMax / 5, 200.0); // Ensure minimum interval of 200
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Responsive height calculation
         final chartHeight = constraints.maxWidth * 0.7;
 
         return Container(
-          height: chartHeight + 80, // Additional height for title and legend
+          height: chartHeight + 80,
           child: Card(
             elevation: 8,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -78,7 +78,7 @@ class WeeklyRevenueChart extends StatelessWidget {
                         gridData: FlGridData(
                           show: true,
                           drawVerticalLine: false,
-                          horizontalInterval: roundedMax / 5,
+                          horizontalInterval: horizontalInterval, // Using safe interval
                           getDrawingHorizontalLine: (value) => FlLine(
                             color: Colors.grey[300],
                             strokeWidth: 1,
@@ -121,7 +121,7 @@ class WeeklyRevenueChart extends StatelessWidget {
                               reservedSize: 46,
                               getTitlesWidget: (value, meta) {
                                 return Text(
-                                  '${value.toStringAsFixed(0)} د ', // Clear labeling with currency symbol
+                                  '${value.toStringAsFixed(0)} د ',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -145,11 +145,11 @@ class WeeklyRevenueChart extends StatelessWidget {
                               final revenue = weeklyData[groupIndex].revenue;
                               final date = weeklyData[groupIndex].date;
                               return BarTooltipItem(
-                                '${intl.DateFormat.yMMMd('ar').format(date)}\n'
-                                    '${intl.NumberFormat.currency(
-                                  symbol: 'ت.د', // Currency symbol
+                                '${DateFormat.yMMMd('ar').format(date)}\n'
+                                    '${NumberFormat.currency(
+                                  symbol: 'ت.د',
                                   decimalDigits: 0,
-                                  locale: 'ar_TN', // Use Tunisian Arabic locale
+                                  locale: 'ar_TN',
                                 ).format(revenue)}',
                                 TextStyle(
                                   color: Colors.white,
@@ -171,8 +171,6 @@ class WeeklyRevenueChart extends StatelessWidget {
       },
     );
   }
-
-
   List<BarChartGroupData> _createBarGroups(List<DailyRevenue> data, double maxWidth) {
     // Calculate optimal bar width based on screen width
     final barWidth = (maxWidth - 64) / data.length * 0.6; // 60% of available space
@@ -181,7 +179,7 @@ class WeeklyRevenueChart extends StatelessWidget {
       final index = entry.key;
       final dayData = entry.value;
 
-      // Calculate gradient colors based on revenue
+      // Define gradient colors based on revenue
       final gradientColors = [
         Colors.blue[300]!,
         Colors.blue[600]!,
@@ -215,19 +213,14 @@ class WeeklyRevenueChart extends StatelessWidget {
       final dayPayments = member.paymentDates.where((paymentDate) =>
       paymentDate.year == date.year &&
           paymentDate.month == date.month &&
-          paymentDate.day == date.day);
+          paymentDate.day == date.day,
+      );
 
       return sum + (dayPayments.length * member.totalPaid);
     });
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return _buildWeeklyRevenueChart();
-  }
 }
 
-// Data model for daily revenue
 class DailyRevenue {
   final DateTime date;
   final double revenue;

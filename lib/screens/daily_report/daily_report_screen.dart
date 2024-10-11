@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:provider/provider.dart';  // Import Provider
+import 'package:gym_energy/widgets/sport_row.dart';
+import 'package:provider/provider.dart';
 import 'package:gym_energy/widgets/metrics_card_widget.dart';
 import 'package:gym_energy/widgets/weekly_revenue_chart.dart';
-import 'package:gym_energy/model/member.dart';
 import '../../provider/gym_provider.dart';
 import '../../widgets/monthly_financial_overview_widget.dart';
 
@@ -50,64 +49,31 @@ class GymAnalyticsDashboard extends StatelessWidget {
       ..sort((a, b) => b.value.compareTo(a.value));
 
     return Card(
+      elevation: 2, // Add elevation for better appearance
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12), // Rounded corners
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Popular Sports',
+              'الرياضات الأكثر شعبية',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18, // Increased font size for title
                 fontWeight: FontWeight.bold,
+                fontFamily: 'Cairo', // Use Cairo font
               ),
             ),
             const SizedBox(height: 10),
-            ...sortedSports.map((entry) => _SportRow(
+            ...sortedSports.map((entry) => SportRow(
               sportName: entry.key,
               memberCount: entry.value,
               totalMembers: gymProvider.members.length,
             )),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SportRow extends StatelessWidget {
-  final String sportName;
-  final int memberCount;
-  final int totalMembers;
-
-  const _SportRow({
-    required this.sportName,
-    required this.memberCount,
-    required this.totalMembers,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final percentage = (memberCount / totalMembers * 100).toStringAsFixed(1);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(sportName),
-              Text('$memberCount ($percentage%)'),
-            ],
-          ),
-          const SizedBox(height: 4),
-          LinearProgressIndicator(
-            value: memberCount / totalMembers,
-            backgroundColor: Colors.grey[200],
-          ),
-        ],
       ),
     );
   }

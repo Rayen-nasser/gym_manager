@@ -93,39 +93,47 @@ class GymMonthlyFinancialOverview extends StatelessWidget {
   }
 
   Widget _buildRevenueChart(double currentRevenue, double expectedRevenue) {
+    // Check if both values are greater than zero
+    if (currentRevenue <= 0 && expectedRevenue <= 0) {
+      return Center(child: Text('لا توجد بيانات لعرضها')); // "No data to display"
+    }
+
     return PieChart(
       PieChartData(
         sectionsSpace: 0,
         centerSpaceRadius: 40,
         sections: [
-          PieChartSectionData(
-            color: Colors.blue,
-            value: currentRevenue,
-            title: 'الحالي',
-            radius: 100,
-            titleStyle: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontFamily: 'Cairo',
+          if (currentRevenue > 0) // Only add section if the value is greater than zero
+            PieChartSectionData(
+              color: Colors.blue,
+              value: currentRevenue,
+              title: 'الحالي',
+              radius: 100,
+              titleStyle: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontFamily: 'Cairo',
+              ),
             ),
-          ),
-          PieChartSectionData(
-            color: Colors.green,
-            value: expectedRevenue,
-            title: 'المتوقع',
-            radius: 100,
-            titleStyle: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontFamily: 'Cairo',
+          if (expectedRevenue > 0) // Only add section if the value is greater than zero
+            PieChartSectionData(
+              color: Colors.green,
+              value: expectedRevenue,
+              title: 'المتوقع',
+              radius: 100,
+              titleStyle: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontFamily: 'Cairo',
+              ),
             ),
-          ),
         ],
       ),
     );
   }
+
 
   Widget _buildRevenueInfo(double currentRevenue, double expectedRevenue, double totalRevenue) {
     return Column(
