@@ -137,8 +137,12 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                 children: [
                   _buildClientHeader(context, isExpired, member),
                   const SizedBox(height: 24),
-                  if (member.email != "" && member.phoneNumber != "")
-                      _buildContactInfo(context, member),
+
+                  // Show _buildContactInfo only if at least one of email or phoneNumber is not empty
+                  if (member.email != null && member.email!.isNotEmpty ||
+                      member.phoneNumber != null && member.phoneNumber!.isNotEmpty)
+                    _buildContactInfo(context, member),
+
                   const SizedBox(height: 24),
                   _buildMembershipInfo(context, isExpired, member),
                   const SizedBox(height: 24),
@@ -255,7 +259,8 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             TextButton(
               child: Text('حذف', style: GoogleFonts.cairo()),
               onPressed: () async {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
                 try {
                   await Provider.of<MembersProvider>(context, listen: false)
                       .deleteMember(client);
@@ -368,26 +373,27 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'معلومات الاتصال',
-            style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'معلومات الاتصال',
+              style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
 
-          if (member.email != "" )
-            _buildInfoRow(
-                Icons.email, 'البريد الإلكتروني:', member.email!, context),
+            // Display email only if it's not null or empty
+            if (member.email != null && member.email!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _buildInfoRow(Icons.email, 'البريد الإلكتروني:', member.email!, context),
+            ],
 
-          const SizedBox(height: 8),
-
-          if (member.phoneNumber != "" )
-            _buildInfoRow(
-                Icons.phone, 'رقم الهاتف:', member.phoneNumber!, context),
-        ],
+            // Display phone number only if it's not null or empty
+            if (member.phoneNumber != null && member.phoneNumber!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _buildInfoRow(Icons.phone, 'رقم الهاتف:', member.phoneNumber!, context),
+            ],
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -535,7 +541,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                         _buildInfoRow(Icons.person, 'المدرب المعين:', trainerName, context),
 
                         // Check if the email is not null and not empty
-                        if (trainerData['email'].length != null && trainerData['email'].isNotEmpty)
+                        if (trainerData['email'].length != null)
                           const SizedBox(height: 4),
                         _buildInfoRow(Icons.email, 'بريد المدرب:', trainerData['email'], context),
 
