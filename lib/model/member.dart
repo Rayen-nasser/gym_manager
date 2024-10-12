@@ -66,7 +66,7 @@ class Member {
           .map((date) => (date as Timestamp).toDate())
           .toList(),
       sports: (data['sports'] as List<dynamic>? ?? [])
-          .map((item) => Sport.fromMap(item as Map<String, dynamic>))
+          .map((item) => Sport.fromMap(item as Map<String, dynamic>, item["id"]))
           .toList(),
       assignedTrainerId: data['assignedTrainerId'],
       clientIds: (data['clientIds'] as List<dynamic>?)?.cast<String>(),

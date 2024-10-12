@@ -4,6 +4,7 @@ import '../../model/gym.dart';
 import '../../model/member.dart';
 import '../../model/sport.dart';
 import '../../provider/gym_provider.dart';
+import '../sport/add_edit_sport_screen.dart';
 
 class GymScreen extends StatefulWidget {
   const GymScreen({Key? key}) : super(key: key);
@@ -44,7 +45,7 @@ class _GymScreenState extends State<GymScreen> {
                 slivers: [
                   SliverToBoxAdapter(child: _buildGymInfoSection()),
                   SliverToBoxAdapter(child: _buildTrainersSection()),
-                  SliverToBoxAdapter(child: _buildSportsSection()),
+                  SliverToBoxAdapter(child: _buildSportsSection(context, gymProvider)),
                 ],
               ),
             );
@@ -216,7 +217,7 @@ class _GymScreenState extends State<GymScreen> {
     );
   }
 
-  Widget _buildSportsSection() {
+  Widget _buildSportsSection(BuildContext context, GymProvider gymProvider) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 16),
       elevation: 4,
@@ -226,21 +227,43 @@ class _GymScreenState extends State<GymScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'الرياضات',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontFamily: 'Cairo',
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).primaryColor,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'الرياضات',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontFamily: 'Cairo',
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.add, color: Theme.of(context).primaryColor),
+                  onPressed: () {
+                    // Navigate to AddEditSportScreen
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => AddEditSportScreen(),
+                      ),
+                    ).then((newSport) {
+                      if (newSport != null) {
+                        // Reload gym data when a new sport is added
+                        gymProvider.loadGymData();
+                      }
+                    });
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: 20),
-            staticGymInfo.sports.isNotEmpty
+            gymProvider.gym.sports.isNotEmpty
                 ? ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: staticGymInfo.sports.length,
-              itemBuilder: (context, index) => _buildSportTile(staticGymInfo.sports[index]),
+              itemCount: gymProvider.gym.sports.length,
+              itemBuilder: (context, index) =>
+                  _buildSportTile(gymProvider.gym.sports[index], gymProvider),
             )
                 : const Text(
               'لا توجد رياضات متاحة.',
@@ -251,8 +274,7 @@ class _GymScreenState extends State<GymScreen> {
       ),
     );
   }
-
-  Widget _buildSportTile(Sport sport) {
+  Widget _buildSportTile(Sport sport, GymProvider gymProvider) {
     return Card(
       elevation: 2,
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -272,8 +294,8 @@ class _GymScreenState extends State<GymScreen> {
           style: const TextStyle(fontFamily: 'Cairo'),
         ),
         trailing: ElevatedButton(
-          onPressed: () => _registerForSport(sport),
-          child: const Text('سجل', style: TextStyle(fontFamily: 'Cairo')),
+          onPressed: () => _editSport(sport, gymProvider),
+          child: const Text('تعديل', style: TextStyle(fontFamily: 'Cairo')),
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).primaryColor,
           ),
@@ -282,16 +304,18 @@ class _GymScreenState extends State<GymScreen> {
     );
   }
 
-  Future<void> _registerForSport(Sport sport) async {
-    try {
-      // await FirestoreService.registerForSport(sport);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم التسجيل بنجاح', style: TextStyle(fontFamily: 'Cairo'))),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('حدث خطأ أثناء التسجيل', style: TextStyle(fontFamily: 'Cairo'))),
-      );
-    }
+  Future<void> _editSport(Sport sport, GymProvider gymProvider) async {
+    Navigator.of(context)
+        .push(
+      MaterialPageRoute(
+        builder: (context) => AddEditSportScreen(sport: sport),
+      ),
+    )
+        .then((updatedSport) {
+      // Reload gym data when sport is edited
+      if (updatedSport != null) {
+        gymProvider.loadGymData();
+      }
+    });
   }
 }

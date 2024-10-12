@@ -32,7 +32,7 @@ class Localization {
     'new_client': 'إضافة عميل جديد',
     'loading': 'جاري المعالجة...',
     'membership_type': 'نوع العضوية',
-    'trainee': 'متدرب',
+    'client': 'عميل',
     'trainer': 'مدرب',
     'personal_info': 'المعلومات الشخصية',
     'subscription_details': 'تفاصيل الاشتراك',

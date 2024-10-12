@@ -10,9 +10,13 @@ class GymProvider with ChangeNotifier {
   Map<String, int> _sportsDistribution = {};
   bool _isLoading = true;
 
+  // Getters
   List<Member> get members => _members;
   bool get isLoading => _isLoading;
   Map<String, int> get sportsDistribution => _sportsDistribution;
+
+  // Add a getter for gym information
+  Gym get gym => staticGymInfo; // Assuming staticGymInfo is of type Gym
 
   // Fetch trainers from Firebase
   Future<List<Member>> fetchTrainers() async {
@@ -32,7 +36,7 @@ class GymProvider with ChangeNotifier {
     try {
       QuerySnapshot querySnapshot = await _firestore.collection('sports').get();
       return querySnapshot.docs.map((doc) {
-        return Sport.fromMap(doc.data() as Map<String, dynamic>);
+        return Sport.fromMap(doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     } catch (e) {
       print("Error fetching sports: $e");
@@ -94,5 +98,4 @@ class GymProvider with ChangeNotifier {
     }
     return distribution;
   }
-
 }

@@ -339,7 +339,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
               spacing: 10,
               runSpacing: 10,
               children: snapshot.data!.docs.map((doc) {
-                var sport = Sport.fromMap(doc.data() as Map<String, dynamic>);
+                var sport = Sport.fromMap(doc.data() as Map<String, dynamic>, doc.id);
                 bool isSelected = _selectedSports.any((s) => s.id == sport.id);
 
                 return ChoiceChip(

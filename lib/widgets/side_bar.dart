@@ -53,7 +53,7 @@ class _SidebarState extends State<Sidebar> {
       final List<Sport> uniqueSports = [];
 
       for (var doc in sportSnapshot.docs) {
-        final sport = Sport.fromMap(doc.data() as Map<String, dynamic>);
+        final sport = Sport.fromMap(doc.data() as Map<String, dynamic>, doc.id);
         if (!uniqueSportNames.contains(sport.name)) {
           uniqueSportNames.add(sport.name);
           uniqueSports.add(sport);
