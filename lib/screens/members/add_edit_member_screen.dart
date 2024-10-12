@@ -135,7 +135,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                   _buildSportsSelection(),
 
                   // Conditional rendering based on member type
-                  if (_selectedMemberType == "trainer") ...[
+                  if (_selectedMemberType == "client") ...[
                     const SizedBox(height: 16),
                     _buildTrainerSelection(),
                   ],
@@ -164,7 +164,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
           _buildPersonalInfo(),
           const SizedBox(height: 16),
           _buildSportsSelection(),
-          if (_selectedMemberType == "trainer") ...[
+          if (_selectedMemberType == "client") ...[
             const SizedBox(height: 16),
             _buildTrainerSelection(),
           ],
@@ -175,6 +175,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
     );
   }
 
+// Widget to build the membership type selection
   Widget _buildTypeSelection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,38 +195,43 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
         SegmentedButton<String>(
           segments: [
             ButtonSegment(
-              value: 'client', // Use string value
+              value: 'trainer', // Use string value for 'trainer'
               label: Text(
-                Localization.membershipTranslations['client'] ?? 'Client',
+                Localization.membershipTranslations['trainer'] ?? 'Trainer',
                 style: TextStyle(
-                  fontFamily: 'Cairo', // Using Cairo font
-                  fontWeight: FontWeight.w700, // Semi-bold style
-                  fontSize: 16, // Adjust font size
-                  color: Theme.of(context).textTheme.bodyLarge?.backgroundColor, // Theme-based color
-                ),
-              ),
-              icon: const Icon(Icons.person),
-            ),
-            ButtonSegment(
-              value: 'trainer', // Use string value
-              label: Text(
-                Localization.membershipTranslations['trainer'] ?? 'trainer',
-                style: TextStyle(
-                  fontFamily: 'Cairo', // Using Cairo font
-                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Cairo', // Cairo font for Arabic support
+                  fontWeight: FontWeight.w700, // Semi-bold text
                   fontSize: 16,
                   color: Theme.of(context).textTheme.bodyLarge?.backgroundColor, // Theme-based color
                 ),
               ),
-              icon: const Icon(Icons.fitness_center),
+              icon: const Icon(Icons.person), // Trainer icon
+            ),
+            ButtonSegment(
+              value: 'client', // Use string value for 'client'
+              label: Text(
+                Localization.membershipTranslations['client'] ?? 'Client',
+                style: TextStyle(
+                  fontFamily: 'Cairo', // Cairo font
+                  fontWeight: FontWeight.w600, // Slightly less bold
+                  fontSize: 16,
+                  color: Theme.of(context).textTheme.bodyLarge?.backgroundColor, // Theme-based color
+                ),
+              ),
+              icon: const Icon(Icons.fitness_center), // Client icon
             ),
           ],
-          selected: {_selectedMemberType}, // Should still hold string value
+          selected: {_selectedMemberType}, // Track the selected value
           onSelectionChanged: (Set<String> selection) {
             setState(() {
-              _selectedMemberType = selection.first; // Update selected member type
+              _selectedMemberType = selection.first; // Update the selected type
+
+              // Additional logic based on selection
               if (_selectedMemberType == 'trainer') {
-                _selectedTrainerId = null; // Reset trainer ID if selected trainer
+                _selectedTrainerId = null; // Reset trainer ID if selecting a trainer
+                // You can add any logic here specific to trainers
+              } else if (_selectedMemberType == 'client') {
+                _selectedTrainerId = null; // Additional logic for clients (if necessary)
               }
             });
           },
@@ -234,9 +240,9 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
             backgroundColor: MaterialStateProperty.resolveWith<Color>(
                   (Set<MaterialState> states) {
                 if (states.contains(MaterialState.selected)) {
-                  return Theme.of(context).colorScheme.primary; // Gym theme primary color
+                  return Theme.of(context).colorScheme.primary; // Gym's theme primary color
                 }
-                return Colors.grey.shade200; // Default background color
+                return Colors.grey.shade200; // Default background color for unselected
               },
             ),
             // Button text color based on the selected state
@@ -245,7 +251,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                 if (states.contains(MaterialState.selected)) {
                   return Colors.white; // White text for selected button
                 }
-                return Colors.black87; // Default text color
+                return Colors.black87; // Default text color for unselected
               },
             ),
           ),
@@ -595,9 +601,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       backgroundColor: color,
     ).show(context);
   }
-
   Future<void> _submitForm() async {
-    // Update the existing validation checks
     if (!_formKey.currentState!.validate()) {
       _showFlushBar(
         Localization.membershipTranslations['fill_required']!,
@@ -634,10 +638,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
               (widget.member != null &&
                   (widget.member!.firstName != firstName ||
                       widget.member!.lastName != lastName)))) {
-        _showFlushBar(
-          'هذا العضو موجود بالفعل.',
-          Colors.red,
-        ); // Arabic message for existing member
+        _showFlushBar('هذا العضو موجود بالفعل.', Colors.red);
         return;
       }
 
@@ -649,10 +650,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
             .get();
 
         if (emailCheck.docs.isNotEmpty) {
-          _showFlushBar(
-            'يجب أن يكون البريد الإلكتروني فريدًا.',
-            Colors.red,
-          ); // Arabic message for email uniqueness
+          _showFlushBar('يجب أن يكون البريد الإلكتروني فريدًا.', Colors.red);
           return;
         }
       }
@@ -665,10 +663,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
             .get();
 
         if (phoneCheck.docs.isNotEmpty) {
-          _showFlushBar(
-            'يجب أن يكون رقم الهاتف فريدًا.',
-            Colors.red,
-          ); // Arabic message for phone number uniqueness
+          _showFlushBar('يجب أن يكون رقم الهاتف فريدًا.', Colors.red);
           return;
         }
       }
@@ -700,11 +695,16 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       late DocumentReference memberRef;
 
       if (widget.member == null) {
-        // Add a new client/member using batched write
-        memberRef = FirebaseFirestore.instance.collection('clients').doc();
+        // Add a new member (trainer or client) using batched write
+        if (member.memberType == 'trainer') {
+          memberRef = FirebaseFirestore.instance.collection('trainers').doc();
+        } else {
+          memberRef = FirebaseFirestore.instance.collection('clients').doc();
+        }
+
         batch.set(memberRef, member.toMap());
 
-        // Add to trainer if selected
+        // Add client to the trainer if a trainer is selected
         if (_selectedTrainerId != null) {
           batch.update(
             FirebaseFirestore.instance.collection('trainers').doc(_selectedTrainerId),
@@ -714,15 +714,15 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
         }
       } else {
         // Edit existing member using batched write
-        memberRef = FirebaseFirestore.instance.collection('clients').doc(widget.member!.id);
+        if (member.memberType == 'trainer') {
+          memberRef = FirebaseFirestore.instance.collection('trainers').doc(widget.member!.id);
+        } else {
+          memberRef = FirebaseFirestore.instance.collection('clients').doc(widget.member!.id);
+        }
 
-        // Check if the document exists before updating
         DocumentSnapshot memberDoc = await memberRef.get();
         if (!memberDoc.exists) {
-          _showFlushBar(
-            'لم يتم العثور على مستند العضو.',
-            Colors.red,
-          ); // Arabic message for member not found
+          _showFlushBar('لم يتم العثور على مستند العضو.', Colors.red);
           return;
         }
 
@@ -747,34 +747,27 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
         updatedDoc.id,
       );
 
-      // Notify MembersProvider to refresh data
-      // Assuming you have a reference to the MembersProvider
       Provider.of<MembersProvider>(context, listen: false).addMember(updatedMember);
 
-      _showFlushBar(
-        Localization.membershipTranslations['success']!,
-        Colors.green,
-      );
+      _showFlushBar(Localization.membershipTranslations['success']!, Colors.green);
 
       // Navigate to the member detail screen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => MemberDetailScreen(memberId: updatedMember.id, backToListMember: true,),
+          builder: (context) => MemberDetailScreen(
+            memberId: updatedMember.id,
+            backToListMember: true,
+          ),
         ),
       );
-
     } catch (e) {
-      _showFlushBar(
-        '${Localization.membershipTranslations['error']}: $e',
-        Colors.red,
-      );
+      _showFlushBar('${Localization.membershipTranslations['error']}: $e', Colors.red);
       print('Error occurred: $e');
     } finally {
       setState(() => _isLoading = false);
     }
   }
-
 
 
   // Function to calculate the total paid based on selected sports

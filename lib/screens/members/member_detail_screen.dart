@@ -533,9 +533,15 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildInfoRow(Icons.person, 'المدرب المعين:', trainerName, context),
-                        const SizedBox(height: 4),
+
+                        // Check if the email is not null and not empty
+                        if (trainerData['email'].length != null && trainerData['email'].isNotEmpty)
+                          const SizedBox(height: 4),
                         _buildInfoRow(Icons.email, 'بريد المدرب:', trainerData['email'], context),
-                        const SizedBox(height: 4),
+
+                        // Check if the phone number is not null
+                        if (trainerData['phoneNumber'] != null)
+                          const SizedBox(height: 4),
                         _buildInfoRow(Icons.phone, 'هاتف المدرب:', trainerData['phoneNumber'], context),
                       ],
                     );
