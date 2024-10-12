@@ -63,6 +63,7 @@ class _MembersScreenState extends State<MembersScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     final screenSize = MediaQuery.of(context).size;
     final isTablet = screenSize.width > 600;
     final isTabletVertical = isTablet && screenSize.height > screenSize.width;
@@ -101,14 +102,21 @@ class _MembersScreenState extends State<MembersScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => MemberDetailScreen(memberId: member.id),
+                          builder: (context) => MemberDetailScreen(
+                            memberId: member.id,
+                          ),
                         ),
                       );
                     },
-                    child: isTablet
-                        ? TabletClientCartWidget(member: member)
-                        : PhoneCartClientWidget(member: member),
-                  );
+                    child: Container(
+                      color: Colors.transparent, // Set a background color to check for touchability
+                      child: isTablet
+                          ? TabletClientCartWidget(member: member)
+                          : PhoneCartClientWidget(member: member),
+                    ),
+                  )
+
+                  ;
                 },
               );
             },

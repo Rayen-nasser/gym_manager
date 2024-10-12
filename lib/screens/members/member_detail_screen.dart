@@ -12,10 +12,12 @@ import '../../provider/members_provider.dart';
 
 class MemberDetailScreen extends StatefulWidget {
   final String memberId;
+  final bool? backToListMember;
 
   const MemberDetailScreen({
     Key? key,
     required this.memberId,
+    this.backToListMember,
   }) : super(key: key);
 
   @override
@@ -83,6 +85,16 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
 
         return Scaffold(
           appBar: AppBar(
+            leading: widget.backToListMember == true
+                ? IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                // Pops the current screen off the stack
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+              },
+            )
+                : null,
             title: Text(member.fullName, style: GoogleFonts.cairo()),
             centerTitle: true,
             actions: [

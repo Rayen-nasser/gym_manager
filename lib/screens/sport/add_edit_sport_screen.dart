@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uuid/uuid.dart';
 import '../../model/sport.dart';
 import '../../widgets/text_flied.dart'; // Make sure this path is correct
 
@@ -49,10 +50,11 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
 
       try {
         final sportData = {
+          'id': widget.sport?.id ?? const Uuid().v4(), // Generate new UUID if adding a new sport
           'name': _nameController.text.trim(),
           'price': double.tryParse(_priceController.text) ?? 0,
           'description': _descriptionController.text.trim(),
-          'duration': int.tryParse(_durationController.text) ?? 60,
+          'sessionDuration': int.tryParse(_durationController.text) ?? 60,
         };
 
         // Check if sport with the same name already exists
@@ -72,25 +74,25 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
         } else {
           if (widget.sport == null) {
             // Add new sport
-            await FirebaseFirestore.instance.collection('sports').add(sportData);
+            await FirebaseFirestore.instance.collection('sports').doc(sportData['id'] as String).set(sportData);
           } else {
-            // Ensure the sport ID is not null before updating
-            if (widget.sport!.id.isNotEmpty) {
-              // Update existing sport by ID using update method
-              await FirebaseFirestore.instance
-                  .collection('sports')
-                  .doc(widget.sport!.id)
-                  .update(sportData);
-            } else {
-              // Handle the case where the sport ID is empty
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Invalid sport ID. Cannot update sport.')),
-              );
-            }
+            // Update existing sport by ID using update method
+            await FirebaseFirestore.instance
+                .collection('sports')
+                .doc(widget.sport!.id)
+                .update(sportData);
           }
 
-          // Return the updated or new data back to the previous screen
-          Navigator.of(context).pop(sportData);
+          // Create Sport object to return
+          final savedSport = Sport(
+            id: sportData['id'] as String,
+            name: sportData['name'] as String,
+            price: (sportData['price'] as num).toDouble(),
+            description: sportData['description'] as String,
+            sessionDuration: sportData['sessionDuration'] as int,
+          );
+
+          Navigator.of(context).pop(savedSport);
         }
       } catch (e) {
         print('Error saving sport: $e');
@@ -177,21 +179,13 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
                   }
                   return null;
                 },
-                maxLines: 1,
               ),
-              const SizedBox(height: 40),
-              ElevatedButton.icon(
+              const SizedBox(height: 20),
+              ElevatedButton(
                 onPressed: _saveSport,
-                icon: const Icon(Icons.save),
-                label: const Text(
-                  'حفظ',
-                  style: TextStyle(fontFamily: 'Cairo'),
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                child: Text(
+                  widget.sport == null ? 'إضافة رياضة' : 'تحديث الرياضة',
+                  style: const TextStyle(fontSize: 18, fontFamily: 'Cairo'),
                 ),
               ),
             ],

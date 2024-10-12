@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gym_energy/widgets/text_flied.dart';
+import 'package:provider/provider.dart';
 
 import '../../localization.dart';
 import '../../model/member.dart';
 import '../../model/sport.dart';
+import '../../provider/members_provider.dart';
+import 'member_detail_screen.dart';
 
 class AddEditMemberScreen extends StatefulWidget {
   final Member? member;
@@ -37,12 +40,12 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
     if (widget.member != null) {
       _firstNameController.text = widget.member!.firstName;
       _lastNameController.text = widget.member!.lastName;
-      _emailController.text = widget.member!.email!;
-      _phoneController.text = widget.member!.phoneNumber!;
+      _emailController.text = widget.member!.email ?? ''; // Change made here
+      _phoneController.text = widget.member!.phoneNumber ?? ''; // Change made here
       _notesController.text = widget.member!.notes ?? '';
       _selectedMemberType = widget.member!.memberType;
       _membershipExpiration = widget.member!.membershipExpiration;
-      _selectedTrainerId = widget.member!.assignedTrainerId;
+      _selectedTrainerId = widget.member!.assignedTrainerId ?? '';
       _selectedSports = widget.member!.sports ?? [];
     }
   }
@@ -552,6 +555,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
     );
   }
 
+
   Widget _buildSubmitButton() {
     return FilledButton.icon(
       onPressed: _isLoading ? null : _submitForm, // Disable button when loading
@@ -595,36 +599,101 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
   Future<void> _submitForm() async {
     // Update the existing validation checks
     if (!_formKey.currentState!.validate()) {
-      _showFlushBar(Localization.membershipTranslations['fill_required']!, Colors.red);
+      _showFlushBar(
+        Localization.membershipTranslations['fill_required']!,
+        Colors.red,
+      );
       return;
     }
 
     if (_selectedSports.isEmpty) {
-      _showFlushBar(Localization.membershipTranslations['select_sport']!, Colors.red);
+      _showFlushBar(
+        Localization.membershipTranslations['select_sport']!,
+        Colors.red,
+      );
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
+      final firstName = _firstNameController.text.trim();
+      final lastName = _lastNameController.text.trim();
+      final email = _emailController.text.trim();
+      final phoneNumber = _phoneController.text.trim();
+
+      // Check for existing members with the same first name and last name
+      final existingMembers = await FirebaseFirestore.instance
+          .collection('clients')
+          .where('firstName', isEqualTo: firstName)
+          .where('lastName', isEqualTo: lastName)
+          .get();
+
+      if (existingMembers.docs.isNotEmpty &&
+          (widget.member == null ||
+              (widget.member != null &&
+                  (widget.member!.firstName != firstName ||
+                      widget.member!.lastName != lastName)))) {
+        _showFlushBar(
+          'هذا العضو موجود بالفعل.',
+          Colors.red,
+        ); // Arabic message for existing member
+        return;
+      }
+
+      // Check for existing email if it is provided
+      if (widget.member == null && email.isNotEmpty) {
+        final emailCheck = await FirebaseFirestore.instance
+            .collection('clients')
+            .where('email', isEqualTo: email)
+            .get();
+
+        if (emailCheck.docs.isNotEmpty) {
+          _showFlushBar(
+            'يجب أن يكون البريد الإلكتروني فريدًا.',
+            Colors.red,
+          ); // Arabic message for email uniqueness
+          return;
+        }
+      }
+
+      // Check for existing phone number if it is provided
+      if (widget.member == null && phoneNumber.isNotEmpty) {
+        final phoneCheck = await FirebaseFirestore.instance
+            .collection('clients')
+            .where('phoneNumber', isEqualTo: phoneNumber)
+            .get();
+
+        if (phoneCheck.docs.isNotEmpty) {
+          _showFlushBar(
+            'يجب أن يكون رقم الهاتف فريدًا.',
+            Colors.red,
+          ); // Arabic message for phone number uniqueness
+          return;
+        }
+      }
+
       // Calculate the total paid based on selected sports asynchronously
       double totalPaid = await _calculateTotalPaid(_selectedSports);
 
       // Create the Member object
       final member = Member(
         id: widget.member?.id ?? '',
-        firstName: _firstNameController.text,
-        lastName: _lastNameController.text,
-        email: _emailController.text,
-        phoneNumber: _phoneController.text,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phoneNumber: phoneNumber,
         createdAt: widget.member?.createdAt ?? DateTime.now(),
         membershipExpiration: _membershipExpiration,
-        totalPaid: totalPaid,
+        totalPaid: widget.member != null ? totalPaid : 0,
         paymentDates: widget.member?.paymentDates ?? [],
         sports: _selectedSports,
-        clientIds: _selectedMemberType == "trainer" ? [] : widget.member?.clientIds ?? null,
+        clientIds: widget.member?.clientIds ?? [],
         notes: _notesController.text,
         memberType: _selectedMemberType,
+        assignedTrainerId: _selectedTrainerId != null && _selectedTrainerId!.isNotEmpty
+            ? _selectedTrainerId
+            : 'none',
       );
 
       WriteBatch batch = FirebaseFirestore.instance.batch();
@@ -641,22 +710,19 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
             FirebaseFirestore.instance.collection('trainers').doc(_selectedTrainerId),
             {'clientIds': FieldValue.arrayUnion([memberRef.id])},
           );
-          // Call the _addClientToTrainer function after the batch update
           await _addClientToTrainer(memberRef.id, _selectedTrainerId!);
         }
       } else {
         // Edit existing member using batched write
-        if(member.memberType == "client") {
-          memberRef = FirebaseFirestore.instance.collection('clients').doc(widget.member!.id);
-        } else {
-          memberRef = FirebaseFirestore.instance.collection('trainers').doc(widget.member!.id);
-        }
+        memberRef = FirebaseFirestore.instance.collection('clients').doc(widget.member!.id);
 
         // Check if the document exists before updating
         DocumentSnapshot memberDoc = await memberRef.get();
         if (!memberDoc.exists) {
-          _showSnackBar('Member document not found.', Colors.red);
-          print('Member document not found for ID: ${widget.member!.id}');
+          _showFlushBar(
+            'لم يتم العثور على مستند العضو.',
+            Colors.red,
+          ); // Arabic message for member not found
           return;
         }
 
@@ -681,38 +747,34 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
         updatedDoc.id,
       );
 
-      _showSnackBar(Localization.membershipTranslations['success']!, Colors.green);
-      Navigator.pop(context, updatedMember); // Return the updated Member object
+      // Notify MembersProvider to refresh data
+      // Assuming you have a reference to the MembersProvider
+      Provider.of<MembersProvider>(context, listen: false).addMember(updatedMember);
+
+      _showFlushBar(
+        Localization.membershipTranslations['success']!,
+        Colors.green,
+      );
+
+      // Navigate to the member detail screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MemberDetailScreen(memberId: updatedMember.id, backToListMember: true,),
+        ),
+      );
+
     } catch (e) {
-      _showSnackBar('${Localization.membershipTranslations['error']}: $e', Colors.red);
+      _showFlushBar(
+        '${Localization.membershipTranslations['error']}: $e',
+        Colors.red,
+      );
       print('Error occurred: $e');
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  void _showSnackBar(String message, Color backgroundColor) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.info, color: Colors.white),
-            const SizedBox(width: 8),
-            Flexible( // Use Flexible here
-              child: Text(
-                message,
-                style: const TextStyle(color: Colors.white),
-                overflow: TextOverflow.ellipsis, // Optional: Adds ellipsis for overflow
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: backgroundColor,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
 
 
   // Function to calculate the total paid based on selected sports

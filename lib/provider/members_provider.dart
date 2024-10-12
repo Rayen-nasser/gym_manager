@@ -97,6 +97,12 @@ class MembersProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Add member details
+  Future<void> addMember(client_model.Member updatedMember) async {
+   _allMembers.add(updatedMember);
+   _applyFilters();
+  }
+
   // Edit member details
   Future<void> editMember(client_model.Member updatedMember) async {
     final collection = updatedMember.memberType == "trainer" ? "trainers" : "clients";

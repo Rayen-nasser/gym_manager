@@ -1,32 +1,34 @@
+import 'package:uuid/uuid.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Sport {
   final String id;
   final String name;
   final double price;
-  final String? description;
-  final int sessionDuration; // in minutes
+  final String description;
+  final int sessionDuration;
 
   Sport({
-    required this.id,
+    String? id,
     required this.name,
     required this.price,
-    this.description,
-    this.sessionDuration = 60,
-  });
+    required this.description,
+    required this.sessionDuration,
+  }) : id = id ?? const Uuid().v4(); // Generate UUID if not provided
 
-  // Factory constructor to create a Sport instance from a Map (Firestore or JSON data)
   factory Sport.fromMap(Map<String, dynamic> data, String documentId) {
     return Sport(
-      id: documentId, // Use the Firestore document ID as the sport ID
-      name: data['name'] ?? 'Unnamed Sport',
-      price: (data['price'] ?? 0).toDouble(),
-      description: data['description'],
-      sessionDuration: data['sessionDuration'] ?? 60,
+      id: documentId,
+      name: data['name'] ?? '',
+      price: (data['price'] ?? 0.0).toDouble(),
+      description: data['description'] ?? '',
+      sessionDuration: data['sessionDuration'] ?? 0,
     );
   }
 
-  // Convert a Sport instance to a Map for Firestore storage
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'name': name,
       'price': price,
       'description': description,
