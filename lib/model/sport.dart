@@ -35,4 +35,21 @@ class Sport {
       'sessionDuration': sessionDuration,
     };
   }
+
+  // CopyWith method for creating modified copies of the Sport instance
+  Sport copyWith({
+    String? id,
+    String? name,
+    double? price,
+    String? description,
+    int? sessionDuration,
+  }) {
+    return Sport(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      price: price ?? this.price,
+      description: description ?? this.description,
+      sessionDuration: sessionDuration ?? this.sessionDuration,
+    );
+  }
 }

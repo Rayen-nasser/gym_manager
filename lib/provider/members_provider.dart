@@ -183,8 +183,7 @@ class MembersProvider with ChangeNotifier {
     }
   }
 
-
-  // New method for renewing membership
+  //renewing membership
   Future<Member> renewMembership(Member member) async {
     try {
       DateTime newExpirationDate = DateTime.now().add(Duration(days: 30));
@@ -222,6 +221,48 @@ class MembersProvider with ChangeNotifier {
     }
   }
 
+  // New method for update price sport
+  Future<void> updateMemberSportPrices(Sport updatedSport) async {
+    try {
+      // Create a map of sports with the updated price
+      final updatedSports = {
+        updatedSport.id: updatedSport.price,
+      };
 
+      // Create a batch for Firestore updates
+      final WriteBatch batch = FirebaseFirestore.instance.batch();
+
+      // Iterate through each member and prepare batch updates
+      for (client_model.Member member in _allMembers) {
+        // Convert to your Member model if necessary
+        final data = Member.fromMap(member.toMap(), member.id); // Ensure you have a method to convert your model
+
+        // Update the sports list to reflect the new price
+        final updatedMemberSports = data.sports.map((sport) {
+          if (sport.id == updatedSport.id) {
+            // Update the price of the matching sport
+            return sport.copyWith(price: updatedSport.price);
+          }
+          return sport;
+        }).toList();
+
+        // Prepare the update for Firestore
+        batch.update(
+          FirebaseFirestore.instance.collection('${member.memberType}s').doc(member.id),
+          {
+            'sports': updatedMemberSports.map((sport) => sport.toMap()).toList(),
+          },
+        );
+      }
+
+      // Commit all updates in a single batch
+      await batch.commit();
+
+      // Refresh members after updating prices
+      await fetchMembers(); // Refresh the list after the update
+    } catch (e) {
+      print('Error updating member sport prices: $e');
+    }
+  }
 
 }

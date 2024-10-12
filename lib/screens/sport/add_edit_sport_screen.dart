@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gym_energy/provider/members_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import '../../model/member.dart';
 import '../../model/sport.dart';
 import '../../widgets/text_flied.dart'; // Make sure this path is correct
 
@@ -41,7 +44,7 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
     super.dispose();
   }
 
-  // Function to save the sport
+// Function to save the sport
   Future<void> _saveSport() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() {
@@ -92,6 +95,13 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
             sessionDuration: sportData['sessionDuration'] as int,
           );
 
+          // Now update the price for all members who have this sport enrolled
+          if(savedSport.price != widget.sport?.price){
+            // Use the existing instance of MembersProvider to update sport prices
+            final membersProvider = Provider.of<MembersProvider>(context, listen: false);
+            await membersProvider.updateMemberSportPrices(savedSport);
+          }
+
           Navigator.of(context).pop(savedSport);
         }
       } catch (e) {
@@ -106,6 +116,7 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

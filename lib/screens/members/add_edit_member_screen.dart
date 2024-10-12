@@ -30,16 +30,20 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
 
 
   DateTime _membershipExpiration = DateTime.now().add(const Duration(days: 30)) ;
-  String _selectedMemberType = "client";
+  String? _selectedMemberType;
   String? _selectedTrainerId;
   List<Sport> _selectedSports = [];
   bool _isLoading = false;
 
   @override
   void initState() {
+
     super.initState();
     // If member data is passed, initialize the form fields for editing
+    print('initState called ${_notesController.text}');
+    // Todo: help me to know .i want to test data put not sorted in console
     if (widget.member != null) {
+
       _firstNameController.text = widget.member!.firstName;
       _lastNameController.text = widget.member!.lastName;
       _emailController.text = widget.member!.email ?? ''; // Change made here
@@ -260,7 +264,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
               icon: const Icon(Icons.fitness_center), // Client icon
             ),
           ],
-          selected: {_selectedMemberType}, // Track the selected value
+          selected: {_selectedMemberType!}, // Track the selected value
           onSelectionChanged: (Set<String> selection) {
             setState(() {
               _selectedMemberType = selection.first; // Update the selected type
@@ -763,7 +767,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
         sports: _selectedSports,
         clientIds: widget.member?.clientIds ?? [],
         notes: _notesController.text,
-        memberType: _selectedMemberType,
+        memberType: _selectedMemberType!,
         assignedTrainerId: _selectedTrainerId != null && _selectedTrainerId!.isNotEmpty
             ? _selectedTrainerId
             : 'none',

@@ -14,47 +14,38 @@ class GymScreen extends StatefulWidget {
 }
 
 class _GymScreenState extends State<GymScreen> {
-  bool isLoading = true;
-  String searchQuery = '';
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) {
         final gymProvider = GymProvider();
-        gymProvider.loadGymData(); // Load data after the provider is created
+        gymProvider.loadGymData();
         return gymProvider;
       },
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Scaffold(
-          body: Consumer<GymProvider>(builder: (context, gymProvider, child) {
-            if (gymProvider.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            return RefreshIndicator(
-              onRefresh: () => gymProvider.loadGymData(),
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _buildGymInfoSection()),
-                  SliverToBoxAdapter(child: _buildTrainersSection()),
-                  SliverToBoxAdapter(child: _buildSportsSection(context, gymProvider)),
-                ],
-              ),
-            );
-          }),
+          body: Consumer<GymProvider>(
+            builder: (context, gymProvider, child) {
+              if (gymProvider.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return RefreshIndicator(
+                onRefresh: () => gymProvider.loadGymData(),
+                child: CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(child: _buildGymInfoSection()),
+                    SliverToBoxAdapter(child: _buildTrainersBySport(gymProvider)),
+                    SliverToBoxAdapter(child: _buildSportsSection(context, gymProvider)),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
   }
-
 
   Widget _buildGymInfoSection() {
     return Card(
@@ -87,6 +78,7 @@ class _GymScreenState extends State<GymScreen> {
       ),
     );
   }
+
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Padding(
@@ -121,13 +113,13 @@ class _GymScreenState extends State<GymScreen> {
     );
   }
 
-  Widget _buildTrainersSection() {
+  Widget _buildTrainersBySport(GymProvider gymProvider) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -139,91 +131,98 @@ class _GymScreenState extends State<GymScreen> {
                 color: Theme.of(context).primaryColor,
               ),
             ),
-            const SizedBox(height: 20),
-            _buildTrainersBySport(),
+            const SizedBox(height: 16),
+            _buildTrainersList(gymProvider),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTrainersBySport() {
+  Widget _buildTrainersList(GymProvider gymProvider) {
     Map<String, List<Member>> trainersBySport = {};
-    for (var trainer in staticGymInfo.trainers) {
-      for (var sport in staticGymInfo.sports) {
+    for (var trainer in gymProvider.gym.trainers) {
+      for (var sport in gymProvider.gym.sports) {
         if (trainer.sports[0].id == sport.id) {
           trainersBySport.putIfAbsent(sport.name, () => []).add(trainer);
         }
       }
     }
 
-    return Column(
-      children: trainersBySport.entries.map((entry) {
-        return _buildSportSection(entry.key, entry.value);
-      }).toList(),
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: trainersBySport.length,
+      itemBuilder: (context, index) {
+        String sportName = trainersBySport.keys.elementAt(index);
+        List<Member> trainers = trainersBySport[sportName]!;
+        return _buildSportTrainersSection(sportName, trainers);
+      },
     );
   }
 
-  Widget _buildSportSection(String sportName, List<Member> trainers) {
+  Widget _buildSportTrainersSection(String sportName, List<Member> trainers) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          sportName,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Cairo',
-            color: Theme.of(context).primaryColor,
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            sportName,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Cairo',
+              color: Theme.of(context).primaryColor,
+            ),
           ),
         ),
-        const SizedBox(height: 12),
-        trainers.isNotEmpty
-            ? ListView.builder(
+        ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: trainers.length,
           itemBuilder: (context, index) => _buildTrainerTile(trainers[index]),
-        )
-            : const Text(
-          'لا يوجد مدربون متاحون.',
-          style: TextStyle(fontStyle: FontStyle.italic, fontFamily: 'Cairo'),
         ),
-        const SizedBox(height: 20),
+        const Divider(thickness: 1),
       ],
     );
   }
 
   Widget _buildTrainerTile(Member trainer) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-          child: Icon(Icons.person, color: Theme.of(context).primaryColor),
-        ),
-        title: Text(
-          trainer.fullName,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
-        ),
-        subtitle: Text(
-          'البريد الإلكتروني: ${trainer.email}',
-          style: const TextStyle(fontFamily: 'Cairo'),
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: CircleAvatar(
+        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+        child: Text(
+          trainer.fullName.substring(0, 1).toUpperCase(),
+          style: TextStyle(
+            color: Theme.of(context).primaryColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
+      title: Text(
+        trainer.fullName,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+      ),
+      subtitle: Text(
+        trainer.email!,
+        style: const TextStyle(fontFamily: 'Cairo'),
+      ),
+      trailing: Icon(Icons.arrow_forward_ios, color: Theme.of(context).primaryColor, size: 16),
+      onTap: () {
+        // TODO: Implement trainer details view
+      },
     );
   }
 
   Widget _buildSportsSection(BuildContext context, GymProvider gymProvider) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -238,84 +237,101 @@ class _GymScreenState extends State<GymScreen> {
                     color: Theme.of(context).primaryColor,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.add, color: Theme.of(context).primaryColor),
-                  onPressed: () {
-                    // Navigate to AddEditSportScreen
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => AddEditSportScreen(),
-                      ),
-                    ).then((newSport) {
-                      if (newSport != null) {
-                        // Reload gym data when a new sport is added
-                        gymProvider.loadGymData();
-                      }
-                    });
-                  },
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: const Text('إضافة رياضة', style: TextStyle(fontFamily: 'Cairo')),
+                  onPressed: () => _addSport(context, gymProvider),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             gymProvider.gym.sports.isNotEmpty
-                ? ListView.builder(
+                ? GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 1.2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+              ),
               itemCount: gymProvider.gym.sports.length,
               itemBuilder: (context, index) =>
                   _buildSportTile(gymProvider.gym.sports[index], gymProvider),
             )
-                : const Text(
-              'لا توجد رياضات متاحة.',
-              style: TextStyle(fontStyle: FontStyle.italic, fontFamily: 'Cairo'),
+                : const Center(
+              child: Text(
+                'لا توجد رياضات متاحة.',
+                style: TextStyle(fontStyle: FontStyle.italic, fontFamily: 'Cairo'),
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
   Widget _buildSportTile(Sport sport, GymProvider gymProvider) {
     return Card(
       elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-          child: Icon(Icons.sports, color: Theme.of(context).primaryColor),
-        ),
-        title: Text(
-          sport.name,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
-        ),
-        subtitle: Text(
-          'السعر: \$${sport.price.toStringAsFixed(2)}',
-          style: const TextStyle(fontFamily: 'Cairo'),
-        ),
-        trailing: ElevatedButton(
-          onPressed: () => _editSport(sport, gymProvider),
-          child: const Text('تعديل', style: TextStyle(fontFamily: 'Cairo')),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).primaryColor,
+      child: InkWell(
+        onTap: () => _editSport(sport, gymProvider),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Icon(Icons.sports, size: 32, color: Theme.of(context).primaryColor),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                sport.name,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '\$${sport.price.toStringAsFixed(2)}',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
+  Future<void> _addSport(BuildContext context, GymProvider gymProvider) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AddEditSportScreen(),
+      ),
+    );
+    if (result != null) {
+      gymProvider.loadGymData();
+    }
+  }
+
   Future<void> _editSport(Sport sport, GymProvider gymProvider) async {
-    Navigator.of(context)
-        .push(
+    final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => AddEditSportScreen(sport: sport),
       ),
-    )
-        .then((updatedSport) {
-      // Reload gym data when sport is edited
-      if (updatedSport != null) {
-        gymProvider.loadGymData();
-      }
-    });
+    );
+    if (result != null) {
+      gymProvider.loadGymData();
+    }
   }
 }

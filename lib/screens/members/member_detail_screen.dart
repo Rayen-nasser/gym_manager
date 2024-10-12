@@ -259,12 +259,17 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             TextButton(
               child: Text('حذف', style: GoogleFonts.cairo()),
               onPressed: () async {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Close the dialog
+
                 try {
+                  // Call the provider to delete the member
                   await Provider.of<MembersProvider>(context, listen: false)
                       .deleteMember(client);
 
+                  // Check if the widget is still mounted before showing the Flushbar
+                  if (!context.mounted) return;
+
+                  // Show success message
                   Flushbar(
                     title: 'نجاح الحذف',
                     message: 'تم حذف العضو: ${client.fullName}',
@@ -286,8 +291,14 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                     ),
                   ).show(context);
 
+                  // Optionally, navigate back or refresh the UI if needed
                   Navigator.of(context).pop(); // Close the ClientDetailScreen if needed
+
                 } catch (error) {
+                  // Check if the widget is still mounted before showing the error message
+                  if (!context.mounted) return;
+
+                  // Show error message
                   Flushbar(
                     title: 'خطأ',
                     message: 'حدث خطأ أثناء حذف العضو: ${client.fullName}',
@@ -316,6 +327,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
       },
     );
   }
+
 
   Widget _buildClientHeader(
       BuildContext context, bool isMembershipExpired, Member member) {
@@ -515,6 +527,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             const SizedBox(height: 8),
             _buildInfoRow(Icons.calendar_today, 'تاريخ الإنشاء:',
                 DateFormat('yyyy-MM-dd').format(member.createdAt), context),
+
             if (member.assignedTrainerId != null) ...[
               const SizedBox(height: 8),
               FutureBuilder<DocumentSnapshot>(
@@ -531,33 +544,34 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                         style: GoogleFonts.cairo(color: Colors.red));
                   }
 
-                  // Check if the snapshot has data and the document exists
                   if (snapshot.hasData && snapshot.data!.exists) {
-                    final trainerData = snapshot.data!.data() as Map<String, dynamic>;
-                    final trainerName = '${trainerData['firstName']} ${trainerData['lastName']}';
+                    final trainerData =
+                    snapshot.data!.data() as Map<String, dynamic>;
+                    final trainerName =
+                        '${trainerData['firstName']} ${trainerData['lastName']}';
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildInfoRow(Icons.person, 'المدرب المعين:', trainerName, context),
-
-                        // Check if the email is not null and not empty
-                        if (trainerData['email'].length != null)
+                        _buildInfoRow(
+                            Icons.person, 'المدرب المعين:', trainerName, context),
+                        if (trainerData['email'] != null &&
+                            trainerData['email'].isNotEmpty)
                           const SizedBox(height: 4),
-                        _buildInfoRow(Icons.email, 'بريد المدرب:', trainerData['email'], context),
-
-                        // Check if the phone number is not null
+                        _buildInfoRow(Icons.email, 'بريد المدرب:',
+                            trainerData['email'], context),
                         if (trainerData['phoneNumber'] != null)
                           const SizedBox(height: 4),
-                        _buildInfoRow(Icons.phone, 'هاتف المدرب:', trainerData['phoneNumber'], context),
+                        _buildInfoRow(Icons.phone, 'هاتف المدرب:',
+                            trainerData['phoneNumber'], context),
                       ],
                     );
                   }
 
-                  // If the document does not exist, return an empty Container or similar
-                  return Container(); // Returns an empty container when no data is available
+                  return Container();
                 },
               ),
             ],
+
             if (member.clientIds != null && member.clientIds!.isNotEmpty) ...[
               const SizedBox(height: 8),
               _buildInfoRow(Icons.group, 'عدد العملاء:',
@@ -571,15 +585,17 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: member.sports
                     .map((sport) => Padding(
-                          padding: const EdgeInsets.only(left: 16, top: 4),
-                          child: Text(
-                            '• ${sport.name}',
-                            style: GoogleFonts.cairo(fontSize: 14),
-                          ),
-                        ))
+                  padding: const EdgeInsets.only(left: 16, top: 4),
+                  child: Text(
+                    '• ${sport.name}',
+                    style: GoogleFonts.cairo(fontSize: 14),
+                  ),
+                ))
                     .toList(),
               ),
             ],
+
+            // Add Notes Section
             if (member.notes != null && member.notes!.isNotEmpty) ...[
               const SizedBox(height: 8),
               _buildInfoRow(Icons.note, 'ملاحظات:', member.notes!, context),
@@ -589,6 +605,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
       ),
     );
   }
+
 
   Widget _buildMembershipInfo(
       BuildContext context, bool isExpired, Member member) {
