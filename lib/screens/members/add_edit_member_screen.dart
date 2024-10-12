@@ -26,9 +26,11 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
+  DateTime _selectedDate = DateTime.now(); // Initialize to current date
 
+
+  DateTime _membershipExpiration = DateTime.now().add(const Duration(days: 30)) ;
   String _selectedMemberType = "client";
-  DateTime _membershipExpiration = DateTime.now().add(const Duration(days: 30));
   String? _selectedTrainerId;
   List<Sport> _selectedSports = [];
   bool _isLoading = false;
@@ -73,10 +75,16 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Existing fields...
                     if (isTablet)
                       _buildTabletLayout(constraints)
                     else
                       _buildPhoneLayout(),
+                    const SizedBox(height: 24),
+
+                    // Date picker field
+                    _buildDateSelector(context),
+
                     const SizedBox(height: 24),
                     _buildSubmitButton(),
                   ],
@@ -84,6 +92,38 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateSelector(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _selectDate(context),
+      child: Card(
+        elevation: 4,
+        margin: const EdgeInsets.symmetric(vertical: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  "تاريخ الإنشاء: ${_selectedDate.toLocal().toString().split(' ')[0]}",
+                  style: GoogleFonts.cairo(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.right, // Align text to the right
+                ),
+              ),
+              Icon(Icons.calendar_today),
+            ],
+          ),
         ),
       ),
     );
@@ -175,7 +215,6 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
     );
   }
 
-// Widget to build the membership type selection
   Widget _buildTypeSelection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,14 +399,19 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                 bool isSelected = _selectedSports.any((s) => s.id == sport.id);
 
                 return ChoiceChip(
-                  label: Text(
-                    sport.name,
-                    style: GoogleFonts.cairo(
-                      fontWeight: FontWeight.bold,
-                      color: isSelected
-                          ? Colors.white
-                          : Theme.of(context).textTheme.titleLarge?.color,
-                    ),
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        sport.name,
+                        style: GoogleFonts.cairo(
+                          fontWeight: FontWeight.bold,
+                          color: isSelected
+                              ? Colors.white
+                              : Theme.of(context).textTheme.titleLarge?.color,
+                        ),
+                      ),
+                    ],
                   ),
                   selected: isSelected,
                   onSelected: (bool selected) {
@@ -431,6 +475,8 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
             }
 
             List<DropdownMenuItem<String>> trainerItems = [];
+            String? validTrainerId;
+
             for (var doc in snapshot.data!.docs) {
               var data = doc.data() as Map<String, dynamic>;
               List<dynamic> trainerSportsData = data['sports'] ?? [];
@@ -441,6 +487,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                 return '';
               }).toList();
 
+              // Check if the trainer can teach any of the selected sports
               bool canTeach = _selectedSports.any((sport) => trainerSports.contains(sport.id));
 
               if (canTeach) {
@@ -454,7 +501,19 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                     ),
                   ),
                 ));
+
+                // Set the first valid trainer as the default selected trainer
+                if (validTrainerId == null) {
+                  validTrainerId = doc.id;
+                }
               }
+            }
+
+            // Check if the selected trainer exists in the filtered list
+            if (trainerItems.isEmpty || !_selectedSports.any((sport) => trainerItems.any((item) => item.value == _selectedTrainerId))) {
+              _selectedTrainerId = null;
+            } else if (_selectedTrainerId == null) {
+              _selectedTrainerId = validTrainerId;
             }
 
             return DropdownButtonFormField<String>(
@@ -561,7 +620,6 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
     );
   }
 
-
   Widget _buildSubmitButton() {
     return FilledButton.icon(
       onPressed: _isLoading ? null : _submitForm, // Disable button when loading
@@ -593,6 +651,24 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
     );
   }
 
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000), // Optional: Set a minimum date
+      lastDate: DateTime(2101), // Optional: Set a maximum date
+    );
+
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+      _membershipExpiration = _selectedDate.add(const Duration(days: 30));
+      print(_membershipExpiration.month);
+    }
+  }
+
+
   // Function to show a flushbar
   void _showFlushBar(String message, Color color) {
     Flushbar(
@@ -601,6 +677,8 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       backgroundColor: color,
     ).show(context);
   }
+
+  // Function to submit a Member
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
       _showFlushBar(
@@ -678,7 +756,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
         lastName: lastName,
         email: email,
         phoneNumber: phoneNumber,
-        createdAt: widget.member?.createdAt ?? DateTime.now(),
+        createdAt: _selectedDate,
         membershipExpiration: _membershipExpiration,
         totalPaid: widget.member != null ? totalPaid : 0,
         paymentDates: widget.member?.paymentDates ?? [],
