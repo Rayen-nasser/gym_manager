@@ -265,4 +265,25 @@ class MembersProvider with ChangeNotifier {
     }
   }
 
+  // New method to check for existing members locally
+  bool memberExists({required String firstName, required String lastName, String? id}) {
+    return _allMembers.any((member) =>
+    member.firstName.toLowerCase() == firstName.toLowerCase() &&
+        member.lastName.toLowerCase() == lastName.toLowerCase()); // Exclude the current member when editing
+  }
+
+  // New method to check for existing email locally
+  bool emailExists(String email, {String? excludeId}) {
+    return _allMembers.any((member) =>
+    member.email?.toLowerCase() == email.toLowerCase() &&
+        member.id != excludeId);
+  }
+
+  // New method to check for existing phone number locally
+  bool phoneNumberExists(String phoneNumber, {String? excludeId}) {
+    return _allMembers.any((member) =>
+    member.phoneNumber == phoneNumber &&
+        member.id != excludeId);
+  }
+
 }

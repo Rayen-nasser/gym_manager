@@ -260,6 +260,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
               child: Text('حذف', style: GoogleFonts.cairo()),
               onPressed: () async {
                 Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop(); // Close the dialog
 
                 try {
                   // Call the provider to delete the member
@@ -268,7 +269,6 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
 
                   // Check if the widget is still mounted before showing the Flushbar
                   if (!context.mounted) return;
-
                   // Show success message
                   Flushbar(
                     title: 'نجاح الحذف',
@@ -290,9 +290,6 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                       ),
                     ),
                   ).show(context);
-
-                  // Optionally, navigate back or refresh the UI if needed
-                  Navigator.of(context).pop(); // Close the ClientDetailScreen if needed
 
                 } catch (error) {
                   // Check if the widget is still mounted before showing the error message

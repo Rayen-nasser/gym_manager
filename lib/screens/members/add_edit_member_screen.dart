@@ -30,7 +30,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
 
 
   DateTime _membershipExpiration = DateTime.now().add(const Duration(days: 30)) ;
-  String? _selectedMemberType;
+  String? _selectedMemberType = "client";
   String? _selectedTrainerId;
   List<Sport> _selectedSports = [];
   bool _isLoading = false;
@@ -40,7 +40,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
 
     super.initState();
     // If member data is passed, initialize the form fields for editing
-    print('initState called ${_notesController.text}');
+    print('initState called ${_selectedMemberType}');
     // Todo: help me to know .i want to test data put not sorted in console
     if (widget.member != null) {
 
@@ -708,30 +708,21 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       final email = _emailController.text.trim();
       final phoneNumber = _phoneController.text.trim();
 
-      // Check for existing members with the same first name and last name
-      final existingMembers = await FirebaseFirestore.instance
-          .collection('clients')
-          .where('firstName', isEqualTo: firstName)
-          .where('lastName', isEqualTo: lastName)
-          .get();
+      final membersProvider = Provider.of<MembersProvider>(context, listen: false);
 
-      if (existingMembers.docs.isNotEmpty &&
-          (widget.member == null ||
-              (widget.member != null &&
-                  (widget.member!.firstName != firstName ||
-                      widget.member!.lastName != lastName)))) {
+      // Check for existing members with the same first name and last name
+      if (membersProvider.memberExists(
+        firstName: firstName,
+        lastName: lastName,
+        id: widget.member?.id,
+      )) {
         _showFlushBar('هذا العضو موجود بالفعل.', Colors.red);
         return;
       }
 
       // Check for existing email if it is provided
       if (widget.member == null && email.isNotEmpty) {
-        final emailCheck = await FirebaseFirestore.instance
-            .collection('clients')
-            .where('email', isEqualTo: email)
-            .get();
-
-        if (emailCheck.docs.isNotEmpty) {
+        if (membersProvider.emailExists(email)) {
           _showFlushBar('يجب أن يكون البريد الإلكتروني فريدًا.', Colors.red);
           return;
         }
@@ -739,12 +730,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
 
       // Check for existing phone number if it is provided
       if (widget.member == null && phoneNumber.isNotEmpty) {
-        final phoneCheck = await FirebaseFirestore.instance
-            .collection('clients')
-            .where('phoneNumber', isEqualTo: phoneNumber)
-            .get();
-
-        if (phoneCheck.docs.isNotEmpty) {
+        if (membersProvider.phoneNumberExists(phoneNumber)) {
           _showFlushBar('يجب أن يكون رقم الهاتف فريدًا.', Colors.red);
           return;
         }
