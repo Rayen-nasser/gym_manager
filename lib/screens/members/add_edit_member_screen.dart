@@ -1,7 +1,7 @@
+import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/date_symbol_data_local.dart'; // Import this for date initialization
 import 'package:gym_energy/widgets/text_flied.dart';
 
 import '../../localization.dart';
@@ -37,8 +37,8 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
     if (widget.member != null) {
       _firstNameController.text = widget.member!.firstName;
       _lastNameController.text = widget.member!.lastName;
-      _emailController.text = widget.member!.email;
-      _phoneController.text = widget.member!.phoneNumber;
+      _emailController.text = widget.member!.email!;
+      _phoneController.text = widget.member!.phoneNumber!;
       _notesController.text = widget.member!.notes ?? '';
       _selectedMemberType = widget.member!.memberType;
       _membershipExpiration = widget.member!.membershipExpiration;
@@ -292,11 +292,13 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
             label: Localization.membershipTranslations['email']!,
             icon: Icons.email_outlined,
             validator: (value) {
-              if (value?.isEmpty ?? true)
-                return Localization.membershipTranslations['enter_email'];
-              if (!value!.contains('@'))
-                return Localization.membershipTranslations['enter_valid_email'];
-              return null;
+              // Allow empty email but validate if provided
+              if (value != null && value.isNotEmpty) {
+                if (!value.contains('@')) {
+                  return Localization.membershipTranslations['enter_valid_email'];
+                }
+              }
+              return null; // Return null if no error
             },
           ),
           const SizedBox(height: 16),
@@ -304,9 +306,15 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
             controller: _phoneController,
             label: Localization.membershipTranslations['phone']!,
             icon: Icons.phone_outlined,
-            validator: (value) => value?.isEmpty ?? true
-                ? Localization.membershipTranslations['enter_phone']
-                : null,
+            validator: (value) {
+              // Validate that the phone number has exactly 8 characters if provided
+              if (value != null && value.isNotEmpty) {
+                if (value.length != 8) {
+                  return Localization.membershipTranslations['phone_length_error']; // Add this translation in your localization
+                }
+              }
+              return null; // Return null if no error
+            },
           ),
         ],
       ),
@@ -575,14 +583,24 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
     );
   }
 
+  // Function to show a flushbar
+  void _showFlushBar(String message, Color color) {
+    Flushbar(
+      message: message,
+      duration: Duration(seconds: 3),
+      backgroundColor: color,
+    ).show(context);
+  }
+
   Future<void> _submitForm() async {
+    // Update the existing validation checks
     if (!_formKey.currentState!.validate()) {
-      _showSnackBar(Localization.membershipTranslations['fill_required']!, Colors.red);
+      _showFlushBar(Localization.membershipTranslations['fill_required']!, Colors.red);
       return;
     }
 
     if (_selectedSports.isEmpty) {
-      _showSnackBar(Localization.membershipTranslations['select_sport']!, Colors.red);
+      _showFlushBar(Localization.membershipTranslations['select_sport']!, Colors.red);
       return;
     }
 

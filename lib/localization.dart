@@ -63,6 +63,7 @@ class Localization {
     'fill_required': 'الرجاء تعبئة جميع الحقول المطلوبة',
     'success': 'تمت إضافة العميل بنجاح',
     'error': 'حدث خطأ أثناء إضافة العميل',
+    'phone_length_error': 'رقم الهاتف يجب أن يتكون من 8 أرقام.'
   };
 
   // Language Support Check

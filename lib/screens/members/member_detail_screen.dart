@@ -355,20 +355,26 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('معلومات الاتصال',
-                style: GoogleFonts.cairo(
-                    fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'معلومات الاتصال',
+            style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+
+          if (member.email != null )
             _buildInfoRow(
-                Icons.email, 'البريد الإلكتروني:', member.email, context),
-            const SizedBox(height: 8),
+                Icons.email, 'البريد الإلكتروني:', member.email!, context),
+
+          const SizedBox(height: 8),
+
+          if (member.phoneNumber != null )
             _buildInfoRow(
-                Icons.phone, 'رقم الهاتف:', member.phoneNumber, context),
-          ],
-        ),
+                Icons.phone, 'رقم الهاتف:', member.phoneNumber!, context),
+        ],
       ),
+    ),
     );
   }
 
@@ -603,28 +609,30 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildActionButton(
-            context: context,
-            icon: Icons.email,
-            label: 'البريد',
-            onPressed: () => _launchEmail(context, member.email),
-            color: Colors.blue,
-          ),
+          if (member.email != null && member.email!.isNotEmpty) // Check if email is not null or empty
+            _buildActionButton(
+              context: context,
+              icon: Icons.email,
+              label: 'البريد',
+              onPressed: () => _launchEmail(context, member.email!),
+              color: Colors.blue,
+            ),
           const SizedBox(width: 8),
-          _buildActionButton(
-            context: context,
-            icon: Icons.call,
-            label: 'اتصال',
-            onPressed: () => _launchCall(context, member.phoneNumber),
-            color: Colors.green,
-          ),
+          if (member.phoneNumber != null && member.phoneNumber!.isNotEmpty) // Check if phone number is not null or empty
+            _buildActionButton(
+              context: context,
+              icon: Icons.call,
+              label: 'اتصال',
+              onPressed: () => _launchCall(context, member.phoneNumber!),
+              color: Colors.green,
+            ),
           const SizedBox(width: 8),
           _buildActionButton(
             context: context,
             icon: Icons.refresh,
             label: 'تجديد',
             onPressed: isExpired
-                ? () => _renewMembership(context, member,provider)
+                ? () => _renewMembership(context, member, provider)
                 : null, // Disable the button if membership is active
             color: isExpired
                 ? Colors.orange
@@ -634,6 +642,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
       ),
     );
   }
+
 
   Widget _buildActionButton({
     required BuildContext context,
