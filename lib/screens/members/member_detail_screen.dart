@@ -137,7 +137,8 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                 children: [
                   _buildClientHeader(context, isExpired, member),
                   const SizedBox(height: 24),
-                  _buildContactInfo(context, member),
+                  if (member.email != "" && member.phoneNumber != "")
+                      _buildContactInfo(context, member),
                   const SizedBox(height: 24),
                   _buildMembershipInfo(context, isExpired, member),
                   const SizedBox(height: 24),
@@ -375,13 +376,13 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
           ),
           const SizedBox(height: 8),
 
-          if (member.email != null )
+          if (member.email != "" )
             _buildInfoRow(
                 Icons.email, 'البريد الإلكتروني:', member.email!, context),
 
           const SizedBox(height: 8),
 
-          if (member.phoneNumber != null )
+          if (member.phoneNumber != "" )
             _buildInfoRow(
                 Icons.phone, 'رقم الهاتف:', member.phoneNumber!, context),
         ],
@@ -405,21 +406,22 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             const SizedBox(height: 16),
             _buildTotalPaid(context, isTablet, member),
             const SizedBox(height: 8),
-            Text(
-              'تواريخ الدفع:',
-              style:
-                  GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: member.paymentDates
-                  .map((date) => Text(
-                        DateFormat('yyyy-MM-dd').format(date),
-                        style: GoogleFonts.cairo(fontSize: 14),
-                      ))
-                  .toList(),
-            ),
+            if (member.paymentDates.isNotEmpty)
+              Text(
+                'تواريخ الدفع:',
+                style:
+                    GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: member.paymentDates
+                    .map((date) => Text(
+                          DateFormat('yyyy-MM-dd').format(date),
+                          style: GoogleFonts.cairo(fontSize: 14),
+                        ))
+                    .toList(),
+              ),
           ],
         ),
       ),
@@ -522,28 +524,25 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                     return Text('خطأ في تحميل بيانات المدرب',
                         style: GoogleFonts.cairo(color: Colors.red));
                   }
+
+                  // Check if the snapshot has data and the document exists
                   if (snapshot.hasData && snapshot.data!.exists) {
-                    final trainerData =
-                        snapshot.data!.data() as Map<String, dynamic>;
-                    final trainerName =
-                        '${trainerData['firstName']} ${trainerData['lastName']}';
+                    final trainerData = snapshot.data!.data() as Map<String, dynamic>;
+                    final trainerName = '${trainerData['firstName']} ${trainerData['lastName']}';
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildInfoRow(Icons.person, 'المدرب المعين:',
-                            trainerName, context),
+                        _buildInfoRow(Icons.person, 'المدرب المعين:', trainerName, context),
                         const SizedBox(height: 4),
-                        _buildInfoRow(Icons.email, 'بريد المدرب:',
-                            trainerData['email'], context),
+                        _buildInfoRow(Icons.email, 'بريد المدرب:', trainerData['email'], context),
                         const SizedBox(height: 4),
-                        _buildInfoRow(Icons.phone, 'هاتف المدرب:',
-                            trainerData['phoneNumber'], context),
+                        _buildInfoRow(Icons.phone, 'هاتف المدرب:', trainerData['phoneNumber'], context),
                       ],
                     );
-                  } else {
-                    return Text('لم يتم العثور على بيانات المدرب',
-                        style: GoogleFonts.cairo(color: Colors.orange));
                   }
+
+                  // If the document does not exist, return an empty Container or similar
+                  return Container(); // Returns an empty container when no data is available
                 },
               ),
             ],
