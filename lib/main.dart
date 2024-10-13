@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gym_energy/provider/gym_provider.dart';
 import 'package:gym_energy/provider/members_provider.dart';
+import 'package:gym_energy/screens/auth/login.dart';
 import 'package:gym_energy/screens/home_screen.dart';
 import 'package:gym_energy/themes/gym_themes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,11 +25,10 @@ void main() async {
       child: MyApp(),
     ),
   );
-
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -66,9 +67,20 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Gym Energy',
       theme: _isDarkMode ? GymThemes.darkTheme : GymThemes.lightTheme,
-      home: HomeScreen(
-        onThemeChanged: toggleTheme,
-        isDarkMode: _isDarkMode,
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else if (snapshot.hasData) {
+            return HomeScreen(
+              onThemeChanged: toggleTheme,
+              isDarkMode: _isDarkMode,
+            );
+          } else {
+            return LoginScreen();
+          }
+        },
       ),
       builder: (context, child) {
         return MediaQuery(

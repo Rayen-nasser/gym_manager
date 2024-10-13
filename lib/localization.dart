@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class Localization {
   static const List<String> _supportedLanguages = ['ar'];
 
@@ -22,6 +20,10 @@ class Localization {
   static String get login => "تسجيل الدخول"; // Login
   static String get forgotPassword => "هل نسيت كلمة المرور؟"; // Forgot Password?
   static String get contactUs => "اتصل بنا"; // Contact Us
+
+  // Error Messages
+  static String get emailError => "الرجاء إدخال بريد إلكتروني صالح"; // Please enter a valid email
+  static String get passwordError => "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل"; // Password must be at least 6 characters
 
   // Other Messages
   static String get successMessage => "تم التسجيل بنجاح!"; // Successfully registered!

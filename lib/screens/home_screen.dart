@@ -6,13 +6,13 @@ import 'package:gym_energy/screens/members/list_members_screen.dart';
 import '../widgets/side_bar.dart';
 
 class HomeScreen extends StatefulWidget {
-  final Function() onThemeChanged;
-  final bool isDarkMode;
+  final Function()? onThemeChanged;
+  final bool? isDarkMode;
 
   const HomeScreen({
     Key? key,
-    required this.onThemeChanged,
-    required this.isDarkMode,
+    this.onThemeChanged,
+    this.isDarkMode,
   }) : super(key: key);
 
   @override
