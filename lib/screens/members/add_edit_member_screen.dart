@@ -152,9 +152,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                 children: [
                   // Membership type selection
                   _buildTypeSelection(context),
-
                   const SizedBox(height: 24),
-
                   // Personal information form
                   _buildPersonalInfo(),
                 ],

@@ -183,35 +183,52 @@ class MembersProvider with ChangeNotifier {
     }
   }
 
-  //renewing membership
+// Renewing membership and handling unpaid months
+  // Renewing membership, handling multiple unpaid months
   Future<Member> renewMembership(Member member) async {
     try {
-      DateTime newExpirationDate = DateTime.now().add(Duration(days: 30));
-      double renewalFee = member.totalSportPrices();
+      DateTime now = DateTime.now();
 
-      // Update Firestore
+      // Calculate the number of unpaid months (if any) based on membership expiration
+      int unpaidMonthsCount = 0;
+      if (member.membershipExpiration.isBefore(now)) {
+        // Calculate the number of months between expiration and now
+        final diffInDays = now.difference(member.membershipExpiration).inDays;
+        unpaidMonthsCount = (diffInDays / 30).ceil(); // Each "month" is considered 30 days
+      }
+
+      // Calculate the new expiration date based on unpaid months
+      DateTime newExpirationDate = now.add(Duration(days: 30 * (unpaidMonthsCount + 1)));
+      // Add one month to the current date, considering any unpaid months
+
+      // Calculate the renewal fee for all unpaid months
+      double renewalFee = member.totalSportPrices() * (unpaidMonthsCount + 1); // Including current month
+
+      // Update Firestore with the new expiration date and payment details
       await FirebaseFirestore.instance
           .collection('${member.memberType}s')
           .doc(member.id)
           .update({
         'membershipExpiration': Timestamp.fromDate(newExpirationDate),
-        'paymentDates': FieldValue.arrayUnion([Timestamp.fromDate(DateTime.now())]),
-        'totalPaid': renewalFee,
+        'paymentDates': FieldValue.arrayUnion([Timestamp.fromDate(DateTime.now())]), // Add current payment date
+        'totalPaid': FieldValue.increment(renewalFee), // Increment by the renewal fee
       });
 
-      // Update local data
+      // Update local member data
       int index = _allMembers.indexWhere((m) => m.id == member.id);
       if (index != -1) {
-        // Create an updated member object
+        // Update the local member object with new expiration and payment details
         Member updatedMember = _allMembers[index].copyWith(
           membershipExpiration: newExpirationDate,
           paymentDates: [..._allMembers[index].paymentDates, DateTime.now()],
-          totalPaid: renewalFee,
+          totalPaid: _allMembers[index].totalPaid + renewalFee, // Increment total paid
         );
-        _allMembers[index] = updatedMember; // Update the local list
-        _applyFilters(); // Refresh filtered members
-        notifyListeners(); // Notify listeners
-        return updatedMember; // Return updated member
+
+        _allMembers[index] = updatedMember; // Update the member in the list
+        _applyFilters(); // Reapply filters to refresh the member list
+        notifyListeners(); // Notify listeners of the changes
+
+        return updatedMember; // Return the updated member
       }
 
       throw Exception('Member not found');

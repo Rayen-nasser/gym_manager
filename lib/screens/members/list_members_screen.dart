@@ -24,15 +24,6 @@ class MembersScreen extends StatefulWidget {
 }
 
 class _MembersScreenState extends State<MembersScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = Provider.of<MembersProvider>(context, listen: false);
-      provider.fetchMembers();
-      _updateFilters(provider);
-    });
-  }
 
   @override
   void didUpdateWidget(MembersScreen oldWidget) {

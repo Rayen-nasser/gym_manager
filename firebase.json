@@ -1,1 +1,39 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"gymenergy-d7b97","appId":"1:545848918902:android:39438377a3a8ad33563057","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"gymenergy-d7b97","configurations":{"android":"1:545848918902:android:39438377a3a8ad33563057","ios":"1:545848918902:ios:b47b2e79edb63adb563057"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "gymenergy-d7b97",
+          "appId": "1:545848918902:android:39438377a3a8ad33563057",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "gymenergy-d7b97",
+          "configurations": {
+            "android": "1:545848918902:android:39438377a3a8ad33563057",
+            "ios": "1:545848918902:ios:b47b2e79edb63adb563057"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint",
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ]
+}

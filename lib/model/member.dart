@@ -22,7 +22,6 @@ class Member {
   // Additional information
   final String? notes;
 
-  // New properties
   final String memberType; // Changed to String
   final bool isActive; // Subscription status (on or off)
 
@@ -98,6 +97,10 @@ class Member {
   // Add a payment
   Member addPayment(double amount, DateTime paymentDate) {
     List<DateTime> updatedPaymentDates = List.from(paymentDates)..add(paymentDate);
+
+    // Check if the payment for the current month is already made
+    bool currentMonthPaid = paymentDate.year == DateTime.now().year && paymentDate.month == DateTime.now().month;
+
     return Member(
       id: id,
       firstName: firstName,
@@ -138,9 +141,24 @@ class Member {
     );
   }
 
-  // Method to calculate the total price of all enrolled sports
+// Method to calculate the total price of all enrolled sports
   double totalSportPrices() {
-    return sports.fold(0.0, (sum, sport) => sum + sport.price);
+    final now = DateTime.now();
+
+    // If the membership expiration is in the future (or today), only charge for the current month
+    if (membershipExpiration.isAfter(now) || membershipExpiration.isAtSameMomentAs(now)) {
+      // Charge for only one month if the membership hasn't expired yet
+      return sports.fold(0.0, (sum, sport) => sum + sport.price);
+    }
+
+    // If the membership has expired, calculate how many months have passed since expiration
+    final monthsSinceExpiration = (now.year * 12 + now.month) - (membershipExpiration.year * 12 + membershipExpiration.month);
+
+    // Add 1 to include the current month in the charge
+    final monthsToPayFor = monthsSinceExpiration + 1;
+
+    // Calculate total price by multiplying sports prices by the number of months to pay for
+    return sports.fold(0.0, (sum, sport) => sum + (sport.price * monthsToPayFor));
   }
 
   // Add a copyWith method
@@ -154,13 +172,14 @@ class Member {
     DateTime? membershipExpiration,
     double? totalPaid,
     List<DateTime>? paymentDates,
+    List<DateTime>? unpaidMonths, // Include unpaidMonths for copy
+    bool? isPaid, // Include isPaid for copy
     List<Sport>? sports,
     String? assignedTrainerId,
     List<String>? clientIds,
     String? notes,
     bool? isActive,
     String? memberType, // Changed to String
-    bool? isSubscriber, // Updated to match
   }) {
     return Member(
       id: id ?? this.id,
@@ -175,9 +194,30 @@ class Member {
       sports: sports ?? this.sports,
       assignedTrainerId: assignedTrainerId ?? this.assignedTrainerId,
       clientIds: clientIds ?? this.clientIds,
-      isActive: isActive ?? this.isActive,
       notes: notes ?? this.notes,
+      isActive: isActive ?? this.isActive,
       memberType: memberType ?? this.memberType, // Update memberType
+    );
+  }
+
+  // Static method to create a Member with default values
+  static Member createDefault() {
+    return Member(
+      id: '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      phoneNumber: '',
+      createdAt: DateTime.now(),
+      membershipExpiration: DateTime.now().add(Duration(days: 30)),
+      totalPaid: 0.0,
+      paymentDates: [],
+      sports: [],
+      assignedTrainerId: null,
+      clientIds: [],
+      notes: null,
+      memberType: 'standard', // Default to standard member type
+      isActive: true, // Default to active
     );
   }
 
@@ -200,4 +240,5 @@ class Member {
   static double calculateTotalRevenueForMonth(List<Member> members, DateTime month) {
     return members.fold(0.0, (sum, member) => sum + member.calculateRevenueForMonth(month));
   }
+
 }
