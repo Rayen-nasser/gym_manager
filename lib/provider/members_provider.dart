@@ -105,9 +105,6 @@ class MembersProvider with ChangeNotifier {
 
   // Edit member details
   Future<void> editMember(client_model.Member updatedMember) async {
-    final collection = updatedMember.memberType == "trainer" ? "trainers" : "clients";
-    await FirebaseFirestore.instance.collection(collection).doc(updatedMember.id).update(updatedMember.toMap());
-
     int index = _allMembers.indexWhere((member) => member.id == updatedMember.id);
     if (index != -1) {
       _allMembers[index] = updatedMember;
@@ -183,7 +180,6 @@ class MembersProvider with ChangeNotifier {
     }
   }
 
-// Renewing membership and handling unpaid months
   // Renewing membership, handling multiple unpaid months
   Future<Member> renewMembership(Member member) async {
     try {

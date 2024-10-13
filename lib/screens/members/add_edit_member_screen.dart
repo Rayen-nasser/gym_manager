@@ -709,10 +709,9 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       final membersProvider = Provider.of<MembersProvider>(context, listen: false);
 
       // Check for existing members with the same first name and last name
-      if (membersProvider.memberExists(
+      if (widget.member == null && membersProvider.memberExists(
         firstName: firstName,
         lastName: lastName,
-        id: widget.member?.id,
       )) {
         _showFlushBar('هذا العضو موجود بالفعل.', Colors.red);
         return;
@@ -762,11 +761,9 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
 
       if (widget.member == null) {
         // Add a new member (trainer or client) using batched write
-        if (member.memberType == 'trainer') {
-          memberRef = FirebaseFirestore.instance.collection('trainers').doc();
-        } else {
-          memberRef = FirebaseFirestore.instance.collection('clients').doc();
-        }
+        memberRef = (member.memberType == 'trainer')
+            ? FirebaseFirestore.instance.collection('trainers').doc()
+            : FirebaseFirestore.instance.collection('clients').doc();
 
         batch.set(memberRef, member.toMap());
 
@@ -780,11 +777,9 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
         }
       } else {
         // Edit existing member using batched write
-        if (member.memberType == 'trainer') {
-          memberRef = FirebaseFirestore.instance.collection('trainers').doc(widget.member!.id);
-        } else {
-          memberRef = FirebaseFirestore.instance.collection('clients').doc(widget.member!.id);
-        }
+        memberRef = (member.memberType == 'trainer')
+            ? FirebaseFirestore.instance.collection('trainers').doc(widget.member!.id)
+            : FirebaseFirestore.instance.collection('clients').doc(widget.member!.id);
 
         DocumentSnapshot memberDoc = await memberRef.get();
         if (!memberDoc.exists) {
@@ -792,8 +787,10 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
           return;
         }
 
+        // Update the member with new data
         batch.update(memberRef, member.toMap());
 
+        // Update trainer's clientIds if a trainer is selected
         if (_selectedTrainerId != null) {
           batch.update(
             FirebaseFirestore.instance.collection('trainers').doc(_selectedTrainerId),
@@ -813,7 +810,12 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
         updatedDoc.id,
       );
 
-      Provider.of<MembersProvider>(context, listen: false).addMember(updatedMember);
+      // Update the provider's state accordingly
+      if (widget.member == null) {
+        membersProvider.addMember(updatedMember); // Add new member
+      } else {
+        membersProvider.editMember(updatedMember); // Update existing member
+      }
 
       _showFlushBar(Localization.membershipTranslations['success']!, Colors.green);
 
@@ -834,7 +836,6 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       setState(() => _isLoading = false);
     }
   }
-
 
   // Function to calculate the total paid based on selected sports
   Future<double> _calculateTotalPaid(List<Sport> selectedSports) async {

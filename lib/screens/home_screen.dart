@@ -3,7 +3,6 @@ import 'package:gym_energy/screens/daily_report/daily_report_screen.dart';
 import 'package:gym_energy/screens/gym/gym_screen.dart';
 import 'package:gym_energy/screens/members/add_edit_member_screen.dart';
 import 'package:gym_energy/screens/members/list_members_screen.dart';
-import 'package:workmanager/workmanager.dart';
 import '../widgets/side_bar.dart';
 
 class HomeScreen extends StatefulWidget {
