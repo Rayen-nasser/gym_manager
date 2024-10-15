@@ -8,10 +8,14 @@ import 'package:gym_energy/screens/home_screen.dart';
 import 'package:gym_energy/themes/gym_themes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
+import 'firebase_options.dart'; // Ensure this file is present
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+
+  // Initialize Firebase with the options from firebase_options.dart
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(
     MultiProvider(
       providers: [
@@ -55,11 +59,11 @@ class _MyAppState extends State<MyApp> {
     await prefs.setBool('isDarkMode', isDark);
   }
 
-  void toggleTheme() {
+  Future<void> toggleTheme() async {
     setState(() {
       _isDarkMode = !_isDarkMode;
-      _saveThemePreference(_isDarkMode);
     });
+    await _saveThemePreference(_isDarkMode);
   }
 
   @override
@@ -71,7 +75,7 @@ class _MyAppState extends State<MyApp> {
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
+            return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasData) {
             return HomeScreen(
               onThemeChanged: toggleTheme,

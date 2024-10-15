@@ -52,7 +52,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     try {
-      User? user = await _authService.signupWithEmail(email, password);
+      User? user = await _authService.signupWithEmail(email, password, fullName);
       if (user != null) {
         // Navigate to LoginScreen or directly to the main app screen
         Navigator.of(context).push(MaterialPageRoute(builder: (context) => HomeScreen()));
@@ -131,7 +131,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       icon: Icons.person,
                       validator: (value) => value!.isEmpty ? "Full name is required" : null,
                       textStyle: GoogleFonts.cairo(
-                        textStyle: theme.textTheme.bodyLarge?.copyWith(color: Colors.white),
+                        textStyle: theme.textTheme.bodyLarge,
                       ),
                     ),
                   ),
@@ -146,7 +146,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       icon: Icons.email,
                       validator: (value) => value!.isEmpty ? Localization.emailError : null,
                       textStyle: GoogleFonts.cairo(
-                        textStyle: theme.textTheme.bodyLarge?.copyWith(color: Colors.white),
+                        textStyle: theme.textTheme.bodyLarge,
                       ),
                     ),
                   ),
@@ -161,7 +161,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       icon: Icons.lock,
                       validator: (value) => value!.isEmpty ? Localization.passwordError : null,
                       textStyle: GoogleFonts.cairo(
-                        textStyle: theme.textTheme.bodyLarge?.copyWith(color: Colors.white),
+                        textStyle: theme.textTheme.bodyLarge,
                       ),
                       obscureText: true,
                     ),
@@ -177,7 +177,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       icon: Icons.lock,
                       validator: (value) => value != _passwordController.text ? "Passwords do not match" : null,
                       textStyle: GoogleFonts.cairo(
-                        textStyle: theme.textTheme.bodyLarge?.copyWith(color: Colors.white),
+                        textStyle: theme.textTheme.bodyLarge,
                       ),
                       obscureText: true,
                     ),

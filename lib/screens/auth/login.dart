@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gym_energy/localization.dart';
 import 'package:gym_energy/screens/auth/signup.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:gym_energy/screens/home_screen.dart';
 
 import '../../widgets/text_flied.dart';
 
@@ -189,6 +190,12 @@ class _LoginScreenState extends State<LoginScreen> {
         _errorMessage = null;
       });
       // Navigate to another screen on successful login
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
+      );
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = e.message;

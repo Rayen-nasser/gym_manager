@@ -1,32 +1,25 @@
-import 'package:cloud_firestore/cloud_firestore.dart'; // Needed for Timestamp
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum UserRole {
   admin,
   employer,
 }
 
-class User {
+class UserModel {
   final String id; // Unique ID for each user
-  final String firstname;
-  final String lastname;
+  final String username;
   final String email; // Email for login/authentication
   final UserRole role; // Role can only be admin or employer
   final DateTime createdAt; // Date when the user was created
 
   // Constructor
-  User({
+  UserModel({
     required this.id,
-    required this.firstname,
-    required this.lastname,
+    required this.username,
     required this.email,
     required this.role,
     required this.createdAt,
   });
-
-  // Method to display the full name
-  String getFullName() {
-    return '$firstname $lastname';
-  }
 
   // Method to check if user is admin
   bool isAdmin() {
@@ -38,26 +31,24 @@ class User {
     return role == UserRole.employer;
   }
 
-  // Method to create a User from a map (e.g., from Firestore document)
-  factory User.fromMap(Map<String, dynamic> data, String documentId) {
-    return User(
+  // Method to create a UserModel from a map (e.g., from Firestore document)
+  factory UserModel.fromMap(Map<String, dynamic> data, String documentId) {
+    return UserModel(
       id: documentId,
-      firstname: data['firstname'] ?? '',
-      lastname: data['lastname'] ?? '',
+      username: data['username'] ?? '',
       email: data['email'] ?? '',
       role: (data['role'] == 'admin') ? UserRole.admin : UserRole.employer,
-      createdAt: (data['createdAt'] as Timestamp).toDate(), // Convert Firestore Timestamp to DateTime
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
     );
   }
 
-  // Method to convert User object to map (e.g., for saving to Firestore)
+  // Method to convert UserModel object to map (e.g., for saving to Firestore)
   Map<String, dynamic> toMap() {
     return {
-      'firstname': firstname,
-      'lastname': lastname,
+      'username': username,
       'email': email,
       'role': role == UserRole.admin ? 'admin' : 'employer',
-      'createdAt': Timestamp.fromDate(createdAt), // Convert DateTime to Firestore Timestamp
+      'createdAt': Timestamp.fromDate(createdAt),
     };
   }
 }
