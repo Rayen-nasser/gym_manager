@@ -5,6 +5,7 @@ import 'package:gym_energy/screens/home_screen.dart';
 import 'package:gym_energy/services/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gym_energy/screens/auth/login.dart' as auth_screens;
+import 'package:another_flushbar/flushbar.dart';
 
 import '../../widgets/text_flied.dart';
 
@@ -22,12 +23,10 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
-  String? _errorMessage;
 
   Future<void> _handleSignup() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
     });
 
     String fullName = _fullNameController.text.trim();
@@ -35,17 +34,36 @@ class _SignupScreenState extends State<SignupScreen> {
     String password = _passwordController.text.trim();
     String confirmPassword = _confirmPasswordController.text.trim();
 
-    if (fullName.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    // Validate full name
+    if (fullName.isEmpty) {
+      _showGuidance("الاسم الكامل مطلوب", "يرجى إدخال اسمك الكامل لإنشاء حساب شخصي", Colors.orange);
       setState(() {
-        _errorMessage = "Please fill in all fields";
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // Validate email
+    if (email.isEmpty || !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      _showGuidance("البريد الإلكتروني غير صالح", "يرجى إدخال عنوان بريد إلكتروني صالح (مثال: user@example.com)", Colors.orange);
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // Validate password
+    if (password.length < 8) {
+      _showGuidance("كلمة المرور قصيرة جدًا", "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل لضمان الأمان", Colors.orange);
+      setState(() {
         _isLoading = false;
       });
       return;
     }
 
     if (password != confirmPassword) {
+      _showGuidance("كلمات المرور غير متطابقة", "تأكد من إدخال نفس كلمة المرور في كلا الحقلين", Colors.orange);
       setState(() {
-        _errorMessage = "Passwords do not match";
         _isLoading = false;
       });
       return;
@@ -53,23 +71,100 @@ class _SignupScreenState extends State<SignupScreen> {
 
     try {
       User? user = await _authService.signupWithEmail(email, password, fullName);
+
       if (user != null) {
-        // Navigate to LoginScreen or directly to the main app screen
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) => HomeScreen()));
-      } else {
+        // Successfully signed up
         setState(() {
-          _errorMessage = "Failed to sign up";
+          _isLoading = false;
+        });
+        _showGuidance("تم إنشاء الحساب بنجاح", "مرحبًا بك في تطبيق إدارة صالة الألعاب الرياضية! يمكنك الآن تسجيل الدخول", Colors.green);
+
+        // Navigate to HomeScreen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      } else {
+        _showGuidance("فشل في إنشاء الحساب", "حدث خطأ أثناء إنشاء حسابك. يرجى المحاولة مرة أخرى لاحقًا", Colors.red);
+        setState(() {
+          _isLoading = false;
         });
       }
-    } catch (e) {
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'email-already-in-use':
+          message = "هذا البريد الإلكتروني مسجل بالفعل. هل تريد تسجيل الدخول بدلاً من ذلك؟";
+          break;
+        case 'weak-password':
+          message = "كلمة المرور ضعيفة جدًا. يرجى اختيار كلمة مرور أقوى تحتوي على أحرف وأرقام ورموز";
+          break;
+        default:
+          message = "حدث خطأ أثناء التسجيل: ${e.message}";
+      }
+      _showGuidance("خطأ في التسجيل", message, Colors.red);
       setState(() {
-        _errorMessage = e.toString();
+        _isLoading = false;
       });
-    } finally {
+    } catch (e) {
+      _showGuidance("خطأ غير متوقع", "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقًا", Colors.red);
       setState(() {
         _isLoading = false;
       });
     }
+  }
+
+  void _showGuidance(String title, String message, Color color) {
+    Flushbar(
+      title: title,
+      message: message,
+      duration: const Duration(seconds: 5),
+      backgroundColor: color,
+      flushbarPosition: FlushbarPosition.TOP,
+      flushbarStyle: FlushbarStyle.FLOATING,
+      margin: const EdgeInsets.all(8),
+      borderRadius: BorderRadius.circular(8),
+      icon: Icon(
+        color == Colors.green ? Icons.check_circle :
+        color == Colors.orange ? Icons.info_outline : Icons.error,
+        color: Colors.white,
+      ),
+      titleText: Text(
+        title,
+        style: GoogleFonts.cairo(
+          textStyle: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: Colors.white,
+          ),
+        ),
+      ),
+      messageText: Text(
+        message,
+        style: GoogleFonts.cairo(
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    ).show(context);
+  }
+
+
+  void _showFlushbar({required String message, required Color color}) {
+    Flushbar(
+      message: message,
+      duration: const Duration(seconds: 3),
+      backgroundColor: color,
+      flushbarPosition: FlushbarPosition.TOP,
+      flushbarStyle: FlushbarStyle.FLOATING,
+      margin: const EdgeInsets.all(8),
+      borderRadius: BorderRadius.circular(8),
+      icon: Icon(
+        color == Colors.green ? Icons.check_circle : Icons.error,
+        color: Colors.white,
+      ),
+    ).show(context);
   }
 
   @override
@@ -129,7 +224,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       controller: _fullNameController,
                       label: Localization.fullNameHint,
                       icon: Icons.person,
-                      validator: (value) => value!.isEmpty ? "Full name is required" : null,
+                      validator: (value) => value!.isEmpty ? "الاسم الكامل مطلوب" : null,
                       textStyle: GoogleFonts.cairo(
                         textStyle: theme.textTheme.bodyLarge,
                       ),
@@ -175,7 +270,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       controller: _confirmPasswordController,
                       label: Localization.confirmPasswordHint,
                       icon: Icons.lock,
-                      validator: (value) => value != _passwordController.text ? "Passwords do not match" : null,
+                      validator: (value) => value != _passwordController.text ? "كلمات المرور غير متطابقة" : null,
                       textStyle: GoogleFonts.cairo(
                         textStyle: theme.textTheme.bodyLarge,
                       ),
@@ -183,21 +278,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
                   const SizedBox(height: 30),
-
-                  // Display Error Message
-                  if (_errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Text(
-                        _errorMessage!,
-                        style: GoogleFonts.cairo(
-                          textStyle: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.red[300],
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
 
                   // Signup Button
                   SizedBox(
