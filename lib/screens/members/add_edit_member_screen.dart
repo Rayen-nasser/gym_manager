@@ -826,6 +826,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
           builder: (context) => MemberDetailScreen(
             memberId: updatedMember.id,
             backToListMember: true,
+            fromEditScreen: widget.member != null ? true : false,
           ),
         ),
       );
