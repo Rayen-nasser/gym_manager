@@ -71,13 +71,12 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyD-L1kS1UcONct-XSX7DWMxS55QQmUm3d0',
-    appId: '1:774919900411:web:63d89cbe4cc680b8d8345e',
-    messagingSenderId: '774919900411',
-    projectId: 'gymenergy-ba2a2',
-    authDomain: 'gymenergy-ba2a2.firebaseapp.com',
-    storageBucket: 'gymenergy-ba2a2.appspot.com',
-    measurementId: 'G-SPZMDGDBQ1',
+    apiKey: 'AIzaSyDd2PyMD08wNnZafPnR2mUEEylTiQJBj4g',
+    appId: '1:545848918902:web:8b91f57838885685563057',
+    messagingSenderId: '545848918902',
+    projectId: 'gymenergy-d7b97',
+    authDomain: 'gymenergy-d7b97.firebaseapp.com',
+    storageBucket: 'gymenergy-d7b97.appspot.com',
   );
 
 }
