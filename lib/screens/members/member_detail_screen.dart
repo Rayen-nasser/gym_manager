@@ -13,11 +13,13 @@ import '../../provider/members_provider.dart';
 class MemberDetailScreen extends StatefulWidget {
   final String memberId;
   final bool? backToListMember;
+  final bool? fromEditScreen;
 
   const MemberDetailScreen({
     Key? key,
     required this.memberId,
     this.backToListMember,
+    this.fromEditScreen,
   }) : super(key: key);
 
   @override
@@ -90,8 +92,15 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
               icon: Icon(Icons.arrow_back),
               onPressed: () {
                 // Pops the current screen off the stack
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
+                if(widget.fromEditScreen == true){
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                } else {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                }
+
               },
             )
                 : null,

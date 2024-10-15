@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:gym_energy/model/member.dart';
-import 'package:gym_energy/model/sport.dart';
 
 class GymMonthlyFinancialOverview extends StatelessWidget {
   final List<Member> members;
@@ -94,43 +93,45 @@ class GymMonthlyFinancialOverview extends StatelessWidget {
   }
 
   Widget _buildRevenueChart(double currentRevenue, double expectedRevenue) {
-    // Check if both values are greater than zero
     if (currentRevenue <= 0 && expectedRevenue <= 0) {
       return Center(child: Text('لا توجد بيانات لعرضها')); // "No data to display"
     }
 
-    return PieChart(
-      PieChartData(
-        sectionsSpace: 0,
-        centerSpaceRadius: 40,
-        sections: [
-          if (currentRevenue > 0) // Only add section if the value is greater than zero
-            PieChartSectionData(
-              color: Colors.blue,
-              value: currentRevenue,
-              title: 'الحالي',
-              radius: 100,
-              titleStyle: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                fontFamily: 'Cairo',
+    return AspectRatio(
+      aspectRatio: 1, // 1:1 aspect ratio
+      child: PieChart(
+        PieChartData(
+          sectionsSpace: 0,
+          centerSpaceRadius: 40,
+          sections: [
+            if (currentRevenue > 0)
+              PieChartSectionData(
+                color: Colors.blue,
+                value: currentRevenue,
+                title: 'الحالي',
+                radius: 100,
+                titleStyle: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontFamily: 'Cairo',
+                ),
               ),
-            ),
-          if (expectedRevenue > 0) // Only add section if the value is greater than zero
-            PieChartSectionData(
-              color: Colors.green,
-              value: expectedRevenue,
-              title: 'المتوقع',
-              radius: 100,
-              titleStyle: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                fontFamily: 'Cairo',
+            if (expectedRevenue > 0)
+              PieChartSectionData(
+                color: Colors.green,
+                value: expectedRevenue,
+                title: 'المتوقع',
+                radius: 100,
+                titleStyle: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontFamily: 'Cairo',
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -181,7 +182,7 @@ class GymMonthlyFinancialOverview extends StatelessWidget {
             ),
           ),
           Text(
-            NumberFormat.currency(symbol: 'د.ت', decimalDigits: 2, locale: 'ar_TN').format(amount),
+            NumberFormat.currency(symbol: 'د', decimalDigits: 2, locale: 'ar_TN').format(amount),
             style: TextStyle(
               fontFamily: 'Cairo',
               fontSize: isTotal ? 18 : 16,
