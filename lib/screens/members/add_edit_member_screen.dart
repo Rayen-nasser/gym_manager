@@ -53,6 +53,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       _membershipExpiration = widget.member!.membershipExpiration;
       _selectedTrainerId = widget.member!.assignedTrainerId ?? '';
       _selectedSports = widget.member!.sports ?? [];
+      _selectedDate = widget.member!.createdAt;
     }
   }
 

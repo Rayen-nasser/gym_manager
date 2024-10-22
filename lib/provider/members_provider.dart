@@ -194,11 +194,11 @@ class MembersProvider with ChangeNotifier {
       }
 
       // Calculate the new expiration date based on unpaid months
-      DateTime newExpirationDate = now.add(Duration(days: 30 * (unpaidMonthsCount + 1)));
+      DateTime newExpirationDate = member.membershipExpiration.add(Duration(days: 30 * unpaidMonthsCount));
       // Add one month to the current date, considering any unpaid months
 
       // Calculate the renewal fee for all unpaid months
-      double renewalFee = member.totalSportPrices() * (unpaidMonthsCount + 1); // Including current month
+      double renewalFee = member.totalSportPrices() * unpaidMonthsCount; // Including current month
 
       // Update Firestore with the new expiration date and payment details
       await FirebaseFirestore.instance

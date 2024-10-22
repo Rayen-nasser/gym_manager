@@ -660,7 +660,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
               context: context,
               icon: Icons.email,
               label: 'البريد',
-              onPressed: () => _launchEmail(context, member.email!),
+              onPressed: () => _launchEmail(context, member),
               color: Colors.blue,
             ),
           const SizedBox(width: 8),
@@ -752,11 +752,34 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
     );
   }
 
-  void _launchEmail(BuildContext context, String email) async {
+  void _launchEmail(BuildContext context, Member member) async {
+    final String subject = 'تجديد اشتراك النادي الرياضي - ${member.firstName} ${member.lastName}';
+
+    // Format the membership expiration date
+    final String formattedExpirationDate = DateFormat('yyyy-MM-dd').format(member.membershipExpiration);
+
+    // Format the total amount paid
+    final String formattedTotalPaid = member.totalSportPrices().toStringAsFixed(2);
+
+    // Create a personalized email body
+    final String body = '''
+مرحباً ${member.firstName} ${member.lastName},
+
+نود تذكيرك بأن اشتراكك في النادي الرياضي قد انتهى بتاريخ $formattedExpirationDate. حتى الآن،  المبلغ الذي يجب دفعه إجمالي قدره $formattedTotalPaid دينار.
+
+للاستمرار في تحسين لياقتك البدنية والوصول إلى الجسم المثالي، يرجى تجديد اشتراكك.
+
+إذا كنت بحاجة إلى أي مساعدة أو استفسارات إضافية، لا تتردد في التواصل معنا.
+
+شكراً لاختيارك نادينا!
+
+فريق النادي الرياضي
+''';
+
     final Uri emailUri = Uri(
       scheme: 'mailto',
-      path: email,
-      query: 'subject=Your Subject Here',
+      path: member.email,
+      query: 'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
     );
 
     try {

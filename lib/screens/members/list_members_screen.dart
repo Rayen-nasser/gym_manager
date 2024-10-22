@@ -102,8 +102,8 @@ class _MembersScreenState extends State<MembersScreen> {
                     child: Container(
                       color: Colors.transparent, // Set a background color to check for touchability
                       child: isTablet
-                          ? TabletClientCartWidget(member: member)
-                          : PhoneCartClientWidget(member: member),
+                          ? TabletClientCartWidget(member: member, index: index + 1,)
+                          : PhoneCartClientWidget(member: member, index: index + 1,),
                     ),
                   )
 

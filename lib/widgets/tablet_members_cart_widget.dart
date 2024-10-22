@@ -6,10 +6,12 @@ import '../screens/members/member_detail_screen.dart';
 
 class TabletClientCartWidget extends StatelessWidget {
   final Member member;
+  final int index; // Add index parameter
 
   const TabletClientCartWidget({
     Key? key,
     required this.member,
+    required this.index,
   }) : super(key: key);
 
   @override
@@ -68,7 +70,7 @@ class TabletClientCartWidget extends StatelessWidget {
         CircleAvatar(
           backgroundColor: Theme.of(context).primaryColor,
           child: Text(
-            member.firstName[0].toUpperCase(),
+            '$index',
             style: GoogleFonts.cairo(
               color: Colors.white,
               fontWeight: FontWeight.bold,

@@ -6,10 +6,12 @@ import '../screens/members/member_detail_screen.dart';
 
 class PhoneCartClientWidget extends StatelessWidget {
   final Member member;
+  final int index; // Add index parameter
 
   const PhoneCartClientWidget({
     Key? key,
     required this.member,
+    required this.index,
   }) : super(key: key);
 
   @override
@@ -68,7 +70,7 @@ class PhoneCartClientWidget extends StatelessWidget {
       radius: 20,
       backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
       child: Text(
-        member.firstName[0].toUpperCase(),
+        '$index',
         style: GoogleFonts.cairo(
           fontSize: 18,
           fontWeight: FontWeight.bold,
